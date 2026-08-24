@@ -1,0 +1,104 @@
+.inventory-container {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+}
+.item-container {
+  width: 700px;
+
+  margin: 20px auto;
+
+  padding: 30px;
+
+  background: white;
+
+  border: 2px solid #d1d5db;
+  border-radius: 8px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+/* Ensure main content takes remaining width and stays side-by-side */
+.main-content {
+  flex: 1;
+  padding: 30px;
+  background: white;
+  overflow-x: auto;
+  align-items: center;
+}
+
+.inventory-title {
+  text-align: center;
+  margin-bottom: 20px;
+  color: #1e293b;
+  font-size: 32px;
+}
+
+.table-card {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  align-items: center ;
+  
+}
+
+.inventory-content {
+  width: auto;
+  overflow-x: auto;
+  margin-top: 15px;
+}
+
+.inventory-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.inventory-table th {
+  background: #b1c0d8;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.164);
+  padding: 23px;
+}
+
+.inventory-table td {
+  padding: 12px;
+  text-align: center;
+  border-bottom: 1px solid #ddd;
+}
+
+.inventory-table tr:hover {
+  background: #f5f5f5e1;
+}
+
+.add-btn-container {
+  text-align: center;
+  margin-top: 25px;
+}
+
+.add-item-btn, .back-btn {
+  background-color: #3f6fbd;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 15px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.add-item-btn:hover, .back-btn:hover {
+  background-color: #3f6fbd;
+}
+.editBtn{
+  background-color: #3f6fbd;
+}
+.add-item-btn-link{
+
+  color: white !important;
+}
