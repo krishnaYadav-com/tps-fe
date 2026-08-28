@@ -38,10 +38,12 @@ class ItemPage extends React.Component{
                         />
                     </div>
 
+
                     <div className="result-section">
                         <Item
                             items={this.state.searchResults}
                             columns={this.state.columns}
+                            loadItems={this.loadItems}
                         />
                     </div>
 
@@ -49,6 +51,19 @@ class ItemPage extends React.Component{
 
             </div>
         );
+    }
+
+    loadItems = () => {
+        axios.get("http://localhost:8080/item/getAllItems")
+            .then((response) => {
+                this.setState({
+                    searchResults: response.data
+                });
+            });
+    }
+    
+    componentDidMount() {
+        this.loadItems();
     }
 }
 export default ItemPage
