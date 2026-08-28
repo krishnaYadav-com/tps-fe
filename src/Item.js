@@ -10,6 +10,10 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogActions from '@mui/material/DialogActions';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
 
 
 class Item extends React.Component {
@@ -27,7 +31,7 @@ class Item extends React.Component {
             openAddDialog: false,
             selectedItem: {}
         }
-        this.handleAddItem=this.handleAddItem.bind(this);
+        this.handleAddItem = this.handleAddItem.bind(this);
     }
 
     fetchAllItems() {
@@ -44,6 +48,14 @@ class Item extends React.Component {
         });
     }
     render() {
+        const unitOfMeasures = [
+            "PCS",
+            "KG",
+            "GRAM",
+            "LITRE",
+            "METER",
+            "BOX"
+        ];
         return (
             <div className='item-container'>
 
@@ -183,21 +195,29 @@ class Item extends React.Component {
                                     })
                                 }
                             />
+                            <FormControl fullWidth margin="normal">
+                                <InputLabel>Unit Of Measure</InputLabel>
 
-                            <TextField
-                                label="Unit Of Measure"
-                                fullWidth
-                                margin="normal"
-                                value={this.state.selectedItem.unitOfMeasure}
-                                onChange={(e) =>
-                                    this.setState({
-                                        selectedItem: {
-                                            ...this.state.selectedItem,
-                                            unitOfMeasure: e.target.value
-                                        }
-                                    })
-                                }
-                            />
+                                <Select
+                                    value={this.state.selectedItem.unitOfMeasure || ""}
+                                    label="Unit Of Measure"
+                                    onChange={(e) =>
+                                        this.setState({
+                                            selectedItem: {
+                                                ...this.state.selectedItem,
+                                                unitOfMeasure: e.target.value
+                                            }
+                                        })
+                                    }
+                                >
+                                    <MenuItem value="PCS">PCS</MenuItem>
+                                    <MenuItem value="KG">KG</MenuItem>
+                                    <MenuItem value="GRAM">GRAM</MenuItem>
+                                    <MenuItem value="LITRE">LITRE</MenuItem>
+                                    <MenuItem value="METER">METER</MenuItem>
+                                    <MenuItem value="BOX">BOX</MenuItem>
+                                </Select>
+                            </FormControl>
 
                             <TextField
                                 label="HSN"
