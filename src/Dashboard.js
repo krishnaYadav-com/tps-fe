@@ -76,7 +76,7 @@ class Dashboard extends React.Component {
                                     className="drawer-link"
                                     onClick={this.closeDrawer}
                                 >
-                                    Inventory
+                                    Item
                                 </Link>
                             </li>
 

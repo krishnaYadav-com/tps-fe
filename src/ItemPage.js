@@ -14,7 +14,9 @@ class ItemPage extends React.Component{
                 { header: "Item Code", field: "itemCode" },
                 { header: "Item Name", field: "itemName" },
                 { header: "UOM", field: "unitOfMeasure" },
-                { header: "HSN", field: "hsn" }
+                { header: "HSN", field: "hsn" },
+                { header: 'Item Rate', field: 'itemRate'},
+                { header: 'GST %', field: 'gstPer'}
             ]
         };
     }

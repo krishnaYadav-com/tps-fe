@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Dashboard from "./Dashboard";
 import ItemPage from "./ItemPage";
 import AddItem from "./AddItem";
+import PartyPage from "./PartyPage";
 // import your other pages here
 
 class App extends React.Component {
@@ -37,7 +38,7 @@ class App extends React.Component {
 
                         <Route
                             path="party"
-                            element={<div>Party</div>}
+                            element={<PartyPage/>}
                         />
 
                         <Route

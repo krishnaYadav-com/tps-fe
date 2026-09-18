@@ -24,7 +24,8 @@ class Item extends React.Component {
             itemName: "",
             unitOfMeasure: "",
             hsn: "",
-            quantity: "",
+            itemRate: "",
+            gstPer: "",
             items: [],
             openUpdateDialog: false,
             openDeleteDialog: false,   // ADD THIS
@@ -67,7 +68,9 @@ class Item extends React.Component {
 
                     <h2 className='inventory-title'>Items</h2>
                     <div className='inventory-content'>
+                    {console.log("ITEMS RECEIVED BY DATAGRID:", this.props.items)}
                         <DataGrid
+                        
                             rows={this.props.items}
                             columns={this.props.columns}
                             getRowId={(row) => row.itemCode}
@@ -132,6 +135,34 @@ class Item extends React.Component {
                                         selectedItem: {
                                             ...this.state.selectedItem,
                                             hsn: e.target.value
+                                        }
+                                    })
+                                }
+                            />
+                            <TextField
+                                label="Item Rate"
+                                fullWidth
+                                margin="normal"
+                                value={this.state.selectedItem.itemRate}
+                                onChange={(e) =>
+                                    this.setState({
+                                        selectedItem: {
+                                            ...this.state.selectedItem,
+                                            itemRate: e.target.value
+                                        }
+                                    })
+                                }
+                            />
+                            <TextField
+                                label="GST Percentage"
+                                fullWidth
+                                margin="normal"
+                                value={this.state.selectedItem.gstPer}
+                                onChange={(e) =>
+                                    this.setState({
+                                        selectedItem: {
+                                            ...this.state.selectedItem,
+                                            gstPer: e.target.value
                                         }
                                     })
                                 }
@@ -216,6 +247,8 @@ class Item extends React.Component {
                                     <MenuItem value="LITRE">LITRE</MenuItem>
                                     <MenuItem value="METER">METER</MenuItem>
                                     <MenuItem value="BOX">BOX</MenuItem>
+                                    <MenuItem value="MM">MM</MenuItem>
+                                    <MenuItem value="FEET">FEET</MenuItem>
                                 </Select>
                             </FormControl>
 
@@ -229,6 +262,34 @@ class Item extends React.Component {
                                         selectedItem: {
                                             ...this.state.selectedItem,
                                             hsn: e.target.value
+                                        }
+                                    })
+                                }
+                            />
+                            <TextField
+                                label="Item Rate"
+                                fullWidth
+                                margin="normal"
+                                value={this.state.selectedItem.itemRate}
+                                onChange={(e) =>
+                                    this.setState({
+                                        selectedItem: {
+                                            ...this.state.selectedItem,
+                                            itemRate: e.target.value
+                                        }
+                                    })
+                                }
+                            />
+                            <TextField
+                                label="GST Percentage"
+                                fullWidth
+                                margin="normal"
+                                value={this.state.selectedItem.gstPer}
+                                onChange={(e) =>
+                                    this.setState({
+                                        selectedItem: {
+                                            ...this.state.selectedItem,
+                                            gstPer: e.target.value
                                         }
                                     })
                                 }
@@ -295,13 +356,16 @@ class Item extends React.Component {
 
                         </Dialog>
                     </div>
-                    <div className="add-btn-container">
-                        <Button
+                    <div className='search-field'>
+
+                        <button
+
+                            className="search-button"
                             onClick={this.handleAddItem}
                         >
                             Add Item
-                        </Button>
-                        {/* <button className="add-item-btn" onClick={this.handleAddItem} >Add Item</button> */}
+                        </button>
+
                     </div>
                 </div>
                 {/* </div> */}

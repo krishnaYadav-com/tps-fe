@@ -102,3 +102,40 @@
 
   color: white !important;
 }
+.refresh-container {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 10px;
+}
+.search-button {
+  width: 120px;
+
+  margin: 20px auto 0;
+
+  padding: 10px;
+
+  border: none;
+  border-radius: 20px;
+
+  background: #2563eb;
+  color: white;
+  align-items: center;
+
+  cursor: pointer;
+}
+.search-button:hover {
+  background: #1d4ed8;
+}
+.search-field {
+  display: flex;
+  align-items: center;
+}
+
+.search-field label {
+  width: 150px;
+
+  font-size: 15px;
+  font-weight: 600;
+
+  color: #172554;
+}

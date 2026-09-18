@@ -49,22 +49,13 @@
 
 .search-button {
     width: 120px;
-
-    margin: 20px auto 0;
-
-    padding: 10px;
-
-    border: none;
-    border-radius: 20px;
-
-    background: #2563eb;
-    color: white;
-
-    font-weight: 600;
-
-    cursor: pointer;
+    margin: 20px auto 0 !important;
+    border-radius: 20px !important;
+    background-color: #2563eb !important;
+    color: white !important;
+    font-weight: 600 !important;
 }
 
 .search-button:hover {
-    background: #1d4ed8;
+    background-color: #1d4ed8 !important;
 }
