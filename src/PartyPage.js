@@ -35,6 +35,19 @@ class PartyPage extends React.Component{
         });
     };
 
+        loadItems = () => {
+        axios.get("http://localhost:8080/party/getAllParty")
+            .then((response) => {
+                this.setState({
+                    searchResults: response.data
+                });
+            });
+    }
+    
+    componentDidMount() {
+        this.loadItems();
+    }
+
     render() {
         
         return (
@@ -52,6 +65,7 @@ class PartyPage extends React.Component{
                         <Party
                             parties={this.state.searchResults}
                             columns={this.state.columns}
+                            loadItems={this.loadItems}
                         />
                     </div>
 
