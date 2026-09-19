@@ -5,6 +5,7 @@ import Dashboard from "./Dashboard";
 import ItemPage from "./ItemPage";
 import AddItem from "./AddItem";
 import PartyPage from "./PartyPage";
+import SalesPage from "./SalesPage";
 // import your other pages here
 
 class App extends React.Component {
@@ -28,7 +29,7 @@ class App extends React.Component {
                         {/* Other pages */}
                         <Route
                             path="sales"
-                            element={<div>Sales</div>}
+                            element={<div><SalesPage /></div>}
                         />
 
                         <Route
