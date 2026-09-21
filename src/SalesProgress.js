@@ -12,11 +12,17 @@ class SalesProgress extends React.Component {
     render() {
 
         const steps = [
-            "Transaction",
+
+            "Transaction Details",
+
             "Party Selection",
+
             "Item Selection",
+
             "Summary"
+
         ];
+
 
         return (
 
@@ -25,26 +31,34 @@ class SalesProgress extends React.Component {
                     backgroundColor: "#ffffff",
                     padding: "20px",
                     marginBottom: "20px",
-                    borderRadius: "10px"
+                    borderRadius: "10px",
+                    border:
+                        "1px solid #e2e8f0"
                 }}
             >
 
                 <Stepper
-                    activeStep={this.props.step - 1}
+                    activeStep={
+                        this.props.step - 1
+                    }
                 >
 
                     {
-                        steps.map((label) => (
+                        steps.map(
+                            (label) => (
 
-                            <Step key={label}>
+                                <Step
+                                    key={label}
+                                >
 
-                                <StepLabel>
-                                    {label}
-                                </StepLabel>
+                                    <StepLabel>
+                                        {label}
+                                    </StepLabel>
 
-                            </Step>
+                                </Step>
 
-                        ))
+                            )
+                        )
                     }
 
                 </Stepper>
@@ -52,7 +66,9 @@ class SalesProgress extends React.Component {
             </div>
 
         );
+
     }
+
 }
 
 export default SalesProgress;

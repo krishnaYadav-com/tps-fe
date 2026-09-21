@@ -1,544 +1,1013 @@
 import React from "react";
+import axios from "axios";
 
 import {
-    Button
+    Button,
+    Card,
+    CardContent,
+    Typography,
+    Divider
 } from "@mui/material";
 
 
 class SalesSummaryPage extends React.Component {
 
+    constructor(props) {
+        super(props);
 
-    calculateSubtotal = () => {
+        this.state = {
 
-        let subtotal = 0;
+            summary: null,
 
+            loading: true,
 
-        this.props.salesData.items.forEach(
-            (item) => {
-
-                subtotal +=
-                    Number(item.quantity) *
-                    Number(item.rate);
-
-            }
-        );
-
-
-        return subtotal;
-
-    };
-
-
-    calculateGST = () => {
-
-        let gst = 0;
-
-
-        this.props.salesData.items.forEach(
-            (item) => {
-
-                const amount =
-                    Number(item.quantity) *
-                    Number(item.rate);
-
-
-                gst +=
-                    amount *
-                    Number(item.gstPer) /
-                    100;
-
-            }
-        );
-
-
-        return gst;
-
-    };
-
-
-    calculateTotal = () => {
-
-        return (
-            this.calculateSubtotal() +
-            this.calculateGST()
-        );
-
-    };
-
-
-    generateInvoice = () => {
-
-        const payload = {
-
-            invoiceNo:
-                this.props.salesData.invoiceNo,
-
-            transactionDate:
-                this.props.salesData.transactionDate,
-
-            transactionType:
-                this.props.salesData.transactionType,
-
-            paymentTerms:
-                this.props.salesData.paymentTerms,
-
-            paymentDueDate:
-                this.props.salesData.paymentDueDate,
-
-            deliveryMode:
-                this.props.salesData.deliveryMode,
-
-            deliveryPaymentTerms:
-                this.props.salesData
-                    .deliveryPaymentTerms,
-
-            poDetails:
-                this.props.salesData.poDetails,
-
-            poNumber:
-                this.props.salesData.poNumber,
-
-            poDate:
-                this.props.salesData.poDate,
-
-            party:
-                this.props.salesData.party,
-
-            items:
-                this.props.salesData.items,
-
-            subtotal:
-                this.calculateSubtotal(),
-
-            gstAmount:
-                this.calculateGST(),
-
-            totalAmount:
-                this.calculateTotal()
+            error: ""
 
         };
+    }
 
+
+    componentDidMount() {
+
+        this.loadSummary();
+
+    }
+
+
+    /*
+     * Fetch final summary from backend.
+     * Backend is responsible for all calculations.
+     */
+    loadSummary = () => {
+
+        const transactionId =
+            this.props.salesData.transactionId;
+
+
+        if (!transactionId) {
+
+            this.setState({
+
+                loading: false,
+
+                error:
+                    "Transaction ID is missing."
+
+            });
+
+            return;
+
+        }
+
+
+        axios.get(
+            `http://localhost:8080/sales/summary/${transactionId}`
+        )
+
+            .then((response) => {
+
+                console.log(
+                    "Sales Summary From Backend:",
+                    response.data
+                );
+
+
+                this.setState({
+
+                    summary:
+                        response.data,
+
+                    loading: false,
+
+                    error: ""
+
+                });
+
+            })
+
+            .catch((error) => {
+
+                console.log(
+                    "Error loading sales summary:",
+                    error
+                );
+
+
+                let message =
+                    "Unable to load sales summary.";
+
+
+                if (
+                    error.response &&
+                    error.response.data
+                ) {
+
+                    if (
+                        typeof error.response.data ===
+                        "string"
+                    ) {
+
+                        message =
+                            error.response.data;
+
+                    }
+
+                    else if (
+                        error.response.data.message
+                    ) {
+
+                        message =
+                            error.response.data.message;
+
+                    }
+
+                }
+
+
+                this.setState({
+
+                    loading: false,
+
+                    error: message
+
+                });
+
+            });
+
+    };
+
+    submitTransaction = () => {
+
+        const transactionId =
+            this.props.transactionId;
+
+
+        axios.post(
+            `http://localhost:8080/sales/submit/${transactionId}`
+        )
+            .then((response) => {
+
+                console.log(
+                    "Sales transaction submitted:",
+                    response.data
+                );
+
+
+                alert(
+                    "Sales transaction submitted successfully."
+                );
+
+
+                window.location.href =
+                    "/sales";
+
+            })
+            .catch((error) => {
+
+                console.log(
+                    "Sales submission failed:",
+                    error
+                );
+
+
+                let message =
+                    "Unable to submit Sales transaction.";
+
+
+                if (
+                    error.response &&
+                    error.response.data
+                ) {
+
+                    message =
+                        error.response.data;
+                }
+
+
+                alert(message);
+
+            });
+    };
+
+    /*
+     * Generate invoice.
+     *
+     * At this point the backend summary is already
+     * the authoritative transaction state.
+     */
+    generateInvoice = () => {
 
         console.log(
-            "Final Sales Payload:"
+            "Generate Invoice For Transaction:",
+            this.props.salesData.transactionId
         );
-
-        console.log(payload);
 
 
         /*
-        Later:
+         * Your iText invoice API can be connected here.
+         *
+         * Example:
+         *
+         * axios.post(
+         *     `http://localhost:8080/sales/generate-invoice/${this.props.salesData.transactionId}`
+         * )
+         */
 
-        axios.post(
-            "http://localhost:8080/sales/add",
-            payload
+
+        alert(
+            "Invoice generation API will be connected here."
         );
-        */
+
+    };
+
+
+    renderInfo = (label, value) => {
+
+        return (
+
+            <div
+                style={{
+                    marginBottom: "14px"
+                }}
+            >
+
+                <Typography
+                    variant="caption"
+                    style={{
+                        color: "#64748b",
+                        display: "block",
+                        marginBottom: "4px"
+                    }}
+                >
+                    {label}
+                </Typography>
+
+
+                <Typography
+                    variant="body1"
+                    style={{
+                        color: "#1e293b",
+                        fontWeight: 500
+                    }}
+                >
+
+                    {
+                        value !== null &&
+                            value !== undefined &&
+                            value !== ""
+                            ? value
+                            : "—"
+                    }
+
+                </Typography>
+
+            </div>
+
+        );
 
     };
 
 
     render() {
 
-        const salesData =
-            this.props.salesData;
+        if (this.state.loading) {
+
+            return (
+
+                <div className="sales-card">
+
+                    <Typography
+                        variant="h6"
+                    >
+                        Loading Sales Summary...
+                    </Typography>
+
+                </div>
+
+            );
+
+        }
+
+
+        if (this.state.error) {
+
+            return (
+
+                <div className="sales-card">
+
+                    <Typography
+                        variant="h6"
+                        style={{
+                            color: "#dc2626",
+                            marginBottom: "15px"
+                        }}
+                    >
+                        Unable to Load Summary
+                    </Typography>
+
+
+                    <Typography
+                        variant="body2"
+                        style={{
+                            color: "#64748b"
+                        }}
+                    >
+                        {this.state.error}
+                    </Typography>
+
+
+                    <Button
+                        variant="contained"
+                        style={{
+                            marginTop: "20px"
+                        }}
+                        onClick={
+                            this.loadSummary
+                        }
+                    >
+                        Retry
+                    </Button>
+
+                </div>
+
+            );
+
+        }
+
+
+        const summary =
+            this.state.summary;
+
+
+        if (!summary) {
+
+            return (
+
+                <div className="sales-card">
+
+                    <Typography>
+                        No summary data available.
+                    </Typography>
+
+                </div>
+
+            );
+
+        }
+
 
         const party =
-            salesData.party;
+            summary.party;
+
+
+
+
+        const transaction = summary.transaction;
+        const transactionDetail = summary.transactionDetail;
+        const items = transactionDetail;
 
 
         return (
 
             <div className="sales-card">
 
-                <h2>
-                    Sales Summary
-                </h2>
+                {/* PAGE HEADER */}
+
+                <div
+                    style={{
+                        marginBottom: "25px"
+                    }}
+                >
+
+                    <Typography
+                        variant="h5"
+                        style={{
+                            fontWeight: 600,
+                            color: "#1e293b"
+                        }}
+                    >
+                        Sales Summary
+                    </Typography>
+
+
+                    <Typography
+                        variant="body2"
+                        style={{
+                            color: "#64748b",
+                            marginTop: "5px"
+                        }}
+                    >
+                        Review the transaction details
+                        before generating the invoice.
+                    </Typography>
+
+                </div>
 
 
                 {/* TRANSACTION DETAILS */}
 
-                <div
+                <Card
+                    elevation={0}
                     style={{
-                        marginTop: "25px",
-                        padding: "20px",
-                        border: "1px solid #ddd",
+                        border:
+                            "1px solid #e2e8f0",
                         borderRadius: "10px"
                     }}
                 >
 
-                    <h3>
-                        Transaction Details
-                    </h3>
+                    <CardContent>
+
+                        <Typography
+                            variant="h6"
+                            style={{
+                                fontWeight: 600,
+                                color: "#1e293b"
+                            }}
+                        >
+                            Transaction Details
+                        </Typography>
 
 
-                    <div
-                        style={{
-                            display: "grid",
-                            gridTemplateColumns:
-                                "1fr 1fr",
-                            gap: "10px 30px"
-                        }}
-                    >
+                        <Divider
+                            style={{
+                                marginTop: "15px",
+                                marginBottom: "20px"
+                            }}
+                        />
 
-                        <p>
-                            <b>
-                                Invoice Date:
-                            </b>{" "}
+
+                        <div
+                            style={{
+                                display: "grid",
+                                gridTemplateColumns:
+                                    "1fr 1fr",
+                                gap: "10px 40px"
+                            }}
+                        >
+
                             {
-                                salesData
-                                    .transactionDate
+                                this.renderInfo(
+                                    "Transaction ID",
+                                    transaction.transactionNo
+                                )
                             }
-                        </p>
 
 
-                        <p>
-                            <b>
-                                Payment Terms:
-                            </b>{" "}
                             {
-                                salesData
-                                    .paymentTerms
+                                this.renderInfo(
+                                    "Invoice Date",
+                                    transaction.transactionDate
+                                )
                             }
-                        </p>
 
 
-                        <p>
-                            <b>
-                                Payment Due Date:
-                            </b>{" "}
                             {
-                                salesData
-                                    .paymentDueDate ||
-                                "—"
+                                this.renderInfo(
+                                    "Payment Terms",
+                                    transaction.paymentTerms
+                                )
                             }
-                        </p>
 
 
-                        <p>
-                            <b>
-                                Delivery Mode:
-                            </b>{" "}
                             {
-                                salesData
-                                    .deliveryMode
+                                this.renderInfo(
+                                    "Payment Due Date",
+                                    transaction.paymentDueDate
+                                )
                             }
-                        </p>
 
 
-                        <p>
-                            <b>
-                                Delivery Payment:
-                            </b>{" "}
                             {
-                                salesData
-                                    .deliveryPaymentTerms
+                                this.renderInfo(
+                                    "Delivery Mode",
+                                    transaction.deliveryMode
+                                )
                             }
-                        </p>
 
 
-                        <p>
-                            <b>
-                                PO Details:
-                            </b>{" "}
                             {
-                                salesData
-                                    .poDetails
+                                this.renderInfo(
+                                    "Delivery Payment",
+                                    transaction.deliveryPaymentTerms
+                                )
                             }
-                        </p>
 
 
-                        {
-                            salesData.poDetails ===
+                            {
+                                this.renderInfo(
+                                    "PO Details",
+                                    transaction.poDetails
+                                )
+                            }
+
+
+                            {
+                                transaction.poDetails ===
                                 "PO Date" && (
 
-                                <>
+                                    <>
 
-                                    <p>
-                                        <b>
-                                            PO Number:
-                                        </b>{" "}
                                         {
-                                            salesData
-                                                .poNumber
+                                            this.renderInfo(
+                                                "PO Number",
+                                                transaction.poNumber
+                                            )
                                         }
-                                    </p>
 
 
-                                    <p>
-                                        <b>
-                                            PO Date:
-                                        </b>{" "}
                                         {
-                                            salesData
-                                                .poDate
+                                            this.renderInfo(
+                                                "PO Date",
+                                                transaction.poDate
+                                            )
                                         }
-                                    </p>
 
-                                </>
+                                    </>
 
-                            )
-                        }
+                                )
+                            }
 
-                    </div>
+                        </div>
 
-                </div>
+                    </CardContent>
+
+                </Card>
 
 
                 {/* PARTY DETAILS */}
 
-                <div
+                <Card
+                    elevation={0}
                     style={{
                         marginTop: "20px",
-                        padding: "20px",
-                        border: "1px solid #ddd",
+                        border:
+                            "1px solid #e2e8f0",
                         borderRadius: "10px"
                     }}
                 >
 
-                    <h3>
-                        Party Details
-                    </h3>
+                    <CardContent>
+
+                        <Typography
+                            variant="h6"
+                            style={{
+                                fontWeight: 600,
+                                color: "#1e293b"
+                            }}
+                        >
+                            Party Details
+                        </Typography>
 
 
-                    {
-                        party && (
+                        <Divider
+                            style={{
+                                marginTop: "15px",
+                                marginBottom: "20px"
+                            }}
+                        />
 
-                            <div
-                                style={{
-                                    display: "grid",
-                                    gridTemplateColumns:
-                                        "1fr 1fr",
-                                    gap: "10px 30px"
-                                }}
-                            >
 
-                                <p>
-                                    <b>
-                                        Party Code:
-                                    </b>{" "}
+                        {
+                            party ? (
+
+                                <div
+                                    style={{
+                                        display: "grid",
+                                        gridTemplateColumns:
+                                            "1fr 1fr",
+                                        gap: "10px 40px"
+                                    }}
+                                >
+
                                     {
-                                        party.partyCode
+                                        this.renderInfo(
+                                            "Party Code",
+                                            party.partyCode
+                                        )
                                     }
-                                </p>
 
 
-                                <p>
-                                    <b>
-                                        Party Name:
-                                    </b>{" "}
                                     {
-                                        party.partyName
+                                        this.renderInfo(
+                                            "Party Name",
+                                            party.partyName
+                                        )
                                     }
-                                </p>
 
 
-                                <p>
-                                    <b>
-                                        Contact:
-                                    </b>{" "}
                                     {
-                                        party.contactNo
+                                        this.renderInfo(
+                                            "Contact No",
+                                            party.contactNo
+                                        )
                                     }
-                                </p>
 
 
-                                <p>
-                                    <b>
-                                        GST No:
-                                    </b>{" "}
                                     {
-                                        party.gstNo
+                                        this.renderInfo(
+                                            "GST No",
+                                            party.gstNo
+                                        )
                                     }
-                                </p>
 
 
-                                <p>
-                                    <b>
-                                        State:
-                                    </b>{" "}
                                     {
-                                        party.partyState
+                                        this.renderInfo(
+                                            "State",
+                                            party.partyState
+                                        )
                                     }
-                                </p>
 
-                            </div>
 
-                        )
-                    }
+                                    {
+                                        this.renderInfo(
+                                            "Email",
+                                            party.emailId
+                                        )
+                                    }
 
-                </div>
+                                </div>
+
+                            ) : (
+
+                                <Typography
+                                    variant="body2"
+                                    style={{
+                                        color: "#64748b"
+                                    }}
+                                >
+                                    Party details are not available.
+                                </Typography>
+
+                            )
+                        }
+
+                    </CardContent>
+
+                </Card>
 
 
                 {/* ITEMS */}
 
-                <div
+                <Card
+                    elevation={0}
                     style={{
                         marginTop: "20px",
-                        padding: "20px",
-                        border: "1px solid #ddd",
+                        border:
+                            "1px solid #e2e8f0",
                         borderRadius: "10px"
                     }}
                 >
 
-                    <h3>
-                        Selected Items
-                    </h3>
+                    <CardContent>
+
+                        <Typography
+                            variant="h6"
+                            style={{
+                                fontWeight: 600,
+                                color: "#1e293b"
+                            }}
+                        >
+                            Item Details
+                        </Typography>
 
 
-                    <table
-                        style={{
-                            width: "100%",
-                            borderCollapse:
-                                "collapse"
-                        }}
-                    >
-
-                        <thead>
-
-                            <tr>
-
-                                <th>Item Code</th>
-
-                                <th>Item Name</th>
-
-                                <th>Qty</th>
-
-                                <th>Rate</th>
-
-                                <th>GST %</th>
-
-                                <th>Amount</th>
-
-                            </tr>
-
-                        </thead>
+                        <Divider
+                            style={{
+                                marginTop: "15px",
+                                marginBottom: "20px"
+                            }}
+                        />
 
 
-                        <tbody>
+                        <div
+                            style={{
+                                overflowX: "auto"
+                            }}
+                        >
 
-                            {
-                                salesData.items.map(
-                                    (item) => (
+                            <table
+                                style={{
+                                    width: "100%",
+                                    minWidth: "1050px",
+                                    borderCollapse:
+                                        "collapse"
+                                }}
+                            >
 
-                                        <tr
-                                            key={
-                                                item.itemCode
-                                            }
-                                        >
+                                <thead>
 
-                                            <td>
-                                                {
-                                                    item.itemCode
-                                                }
-                                            </td>
+                                    <tr>
 
-                                            <td>
-                                                {
-                                                    item.itemName
-                                                }
-                                            </td>
+                                        <th style={this.headerStyle}>
+                                            Item Code
+                                        </th>
 
-                                            <td>
-                                                {
-                                                    item.quantity
-                                                }
-                                            </td>
+                                        <th style={this.headerStyle}>
+                                            Item Name
+                                        </th>
 
-                                            <td>
-                                                ₹{" "}
-                                                {
-                                                    Number(
-                                                        item.rate
-                                                    ).toFixed(2)
-                                                }
-                                            </td>
+                                        <th style={this.headerStyle}>
+                                            UOM
+                                        </th>
 
-                                            <td>
-                                                {
-                                                    item.gstPer
-                                                }%
-                                            </td>
+                                        <th style={this.headerStyle}>
+                                            Qty
+                                        </th>
 
-                                            <td>
-                                                ₹{" "}
-                                                {
-                                                    (
-                                                        Number(
+                                        <th style={this.headerStyle}>
+                                            Rate
+                                        </th>
+
+                                        <th style={this.headerStyle}>
+                                            GST %
+                                        </th>
+
+                                        <th style={this.headerStyle}>
+                                            Sub Amount
+                                        </th>
+
+                                        <th style={this.headerStyle}>
+                                            Tax Amount
+                                        </th>
+
+                                        <th style={this.headerStyle}>
+                                            Inclusive Amount
+                                        </th>
+
+                                    </tr>
+
+                                </thead>
+
+
+                                <tbody>
+
+                                    {
+                                        items.map(
+                                            (item) => (
+
+                                                <tr
+                                                    key={
+                                                        item.transactionDetailId ||
+                                                        item.itemCode
+                                                    }
+                                                >
+
+                                                    <td style={this.cellStyle}>
+                                                        {
+                                                            item.itemCode
+                                                        }
+                                                    </td>
+
+
+                                                    <td style={this.cellStyle}>
+                                                        {
+                                                            item.itemName
+                                                        }
+                                                    </td>
+
+
+                                                    <td style={this.cellStyle}>
+                                                        {
+                                                            item.unitOfMeasure
+                                                        }
+                                                    </td>
+
+
+                                                    <td style={this.cellStyle}>
+                                                        {
                                                             item.quantity
-                                                        ) *
-                                                        Number(
-                                                            item.rate
-                                                        )
-                                                    ).toFixed(2)
-                                                }
-                                            </td>
-
-                                        </tr>
-
-                                    )
-                                )
-                            }
-
-                        </tbody>
-
-                    </table>
-
-                </div>
+                                                        }
+                                                    </td>
 
 
-                {/* TOTAL */}
+                                                    <td style={this.cellStyle}>
+                                                        ₹{" "}
+                                                        {
+                                                            Number(
+                                                                item.rate
+                                                            ).toFixed(2)
+                                                        }
+                                                    </td>
+
+
+                                                    <td style={this.cellStyle}>
+                                                        {
+                                                            item.gstPer
+                                                        }%
+                                                    </td>
+
+
+                                                    <td style={this.cellStyle}>
+                                                        ₹{" "}
+                                                        {
+                                                            Number(
+                                                                item.subAmount
+                                                            ).toFixed(2)
+                                                        }
+                                                    </td>
+
+
+                                                    <td style={this.cellStyle}>
+                                                        ₹{" "}
+                                                        {
+                                                            Number(
+                                                                item.taxAmount
+                                                            ).toFixed(2)
+                                                        }
+                                                    </td>
+
+
+                                                    <td
+                                                        style={{
+                                                            ...this.cellStyle,
+                                                            fontWeight: 600
+                                                        }}
+                                                    >
+                                                        ₹{" "}
+                                                        {
+                                                            Number(
+                                                                item.inclusiveAmount
+                                                            ).toFixed(2)
+                                                        }
+                                                    </td>
+
+                                                </tr>
+
+                                            )
+                                        )
+                                    }
+
+                                </tbody>
+
+                            </table>
+
+                        </div>
+
+                    </CardContent>
+
+                </Card>
+
+
+                {/* TOTAL CARD */}
 
                 <div
                     style={{
-                        marginTop: "20px",
-                        padding: "20px",
-                        textAlign: "right"
+                        display: "flex",
+                        justifyContent: "flex-end",
+                        marginTop: "20px"
                     }}
                 >
 
-                    <p>
-                        <b>
-                            Subtotal:
-                        </b>{" "}
-                        ₹
-                        {
-                            this.calculateSubtotal()
-                                .toFixed(2)
-                        }
-                    </p>
+                    <Card
+                        elevation={0}
+                        style={{
+                            width: "380px",
+                            border:
+                                "1px solid #e2e8f0",
+                            borderRadius: "10px"
+                        }}
+                    >
+
+                        <CardContent>
+
+                            <Typography
+                                variant="h6"
+                                style={{
+                                    fontWeight: 600,
+                                    color: "#1e293b",
+                                    marginBottom: "15px"
+                                }}
+                            >
+                                Invoice Summary
+                            </Typography>
 
 
-                    <p>
-                        <b>
-                            GST:
-                        </b>{" "}
-                        ₹
-                        {
-                            this.calculateGST()
-                                .toFixed(2)
-                        }
-                    </p>
+                            <Divider
+                                style={{
+                                    marginBottom: "18px"
+                                }}
+                            />
 
 
-                    <h2>
-                        Grand Total:
-                        {" "}
-                        ₹
-                        {
-                            this.calculateTotal()
-                                .toFixed(2)
-                        }
-                    </h2>
+                            <div
+                                style={{
+                                    display: "flex",
+                                    justifyContent:
+                                        "space-between",
+                                    marginBottom: "12px"
+                                }}
+                            >
+
+                                <Typography>
+                                    Sub Amount
+                                </Typography>
+
+
+                                <Typography
+                                    style={{
+                                        fontWeight: 500
+                                    }}
+                                >
+                                    ₹{" "}
+                                    {
+                                        Number(
+                                            transaction.subtotal
+                                        ).toFixed(2)
+                                    }
+                                </Typography>
+
+                            </div>
+
+
+                            <div
+                                style={{
+                                    display: "flex",
+                                    justifyContent:
+                                        "space-between",
+                                    marginBottom: "15px"
+                                }}
+                            >
+
+                                <Typography>
+                                    Total Tax
+                                </Typography>
+
+
+                                <Typography
+                                    style={{
+                                        fontWeight: 500
+                                    }}
+                                >
+                                    ₹{" "}
+                                    {
+                                        Number(
+                                            transaction.gstAmount
+                                        ).toFixed(2)
+                                    }
+                                </Typography>
+
+                            </div>
+
+
+                            <Divider
+                                style={{
+                                    marginBottom: "15px"
+                                }}
+                            />
+
+
+                            <div
+                                style={{
+                                    display: "flex",
+                                    justifyContent:
+                                        "space-between"
+                                }}
+                            >
+
+                                <Typography
+                                    variant="h6"
+                                    style={{
+                                        fontWeight: 700,
+                                        color: "#1e293b"
+                                    }}
+                                >
+                                    Final Amount
+                                </Typography>
+
+
+                                <Typography
+                                    variant="h6"
+                                    style={{
+                                        fontWeight: 700,
+                                        color: "#1e293b"
+                                    }}
+                                >
+                                    ₹{" "}
+                                    {
+                                        Number(
+                                            transaction.totalAmount
+                                        ).toFixed(2)
+                                    }
+                                </Typography>
+
+                            </div>
+
+                        </CardContent>
+
+                    </Card>
 
                 </div>
 
 
-                {/* BUTTONS */}
+                {/* NAVIGATION */}
 
                 <div
                     style={{
-                        marginTop: "20px",
+                        marginTop: "30px",
+                        paddingTop: "20px",
+                        borderTop:
+                            "1px solid #e2e8f0",
                         display: "flex",
                         justifyContent:
                             "space-between"
@@ -557,11 +1026,9 @@ class SalesSummaryPage extends React.Component {
 
                     <Button
                         variant="contained"
-                        onClick={
-                            this.generateInvoice
-                        }
+                        onClick={this.submitTransaction}
                     >
-                        Generate Invoice
+                        Submit Transaction
                     </Button>
 
                 </div>
@@ -570,6 +1037,49 @@ class SalesSummaryPage extends React.Component {
 
         );
     }
+
+
+    headerStyle = {
+
+        textAlign: "left",
+
+        padding:
+            "12px 10px",
+
+        backgroundColor:
+            "#f8fafc",
+
+        color:
+            "#475569",
+
+        fontSize:
+            "13px",
+
+        fontWeight:
+            600,
+
+        borderBottom:
+            "1px solid #e2e8f0"
+
+    };
+
+
+    cellStyle = {
+
+        padding:
+            "12px 10px",
+
+        color:
+            "#334155",
+
+        fontSize:
+            "14px",
+
+        borderBottom:
+            "1px solid #f1f5f9"
+
+    };
+
 }
 
 export default SalesSummaryPage;

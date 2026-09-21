@@ -1,14 +1,21 @@
 import React from "react";
 import axios from "axios";
 
-
 import {
     DataGrid
 } from "@mui/x-data-grid";
 
 import {
     Button,
-    TextField
+    TextField,
+    Card,
+    CardContent,
+    Typography,
+    Divider,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions
 } from "@mui/material";
 
 import SearchItem from "./SearchItem";
@@ -21,113 +28,175 @@ class SalesItemPage extends React.Component {
 
         this.state = {
 
+            itemCode: "",
+
             searchResults: [],
 
             selectedItems:
                 this.props.salesData.items || [],
 
-            columns: [
+            openSearchDialog: false
 
-                {
-                    field: "itemCode",
-                    headerName: "Item Code",
-                    width: 120
-                },
-
-                {
-                    field: "itemName",
-                    headerName: "Item Name",
-                    width: 200
-                },
-
-                {
-                    field: "unitOfMeasure",
-                    headerName: "UOM",
-                    width: 120
-                },
-
-                {
-                    field: "hsn",
-                    headerName: "HSN",
-                    width: 130
-                },
-
-                {
-                    field: "itemRate",
-                    headerName: "Rate",
-                    width: 120
-                },
-
-                {
-                    field: "gstPer",
-                    headerName: "GST %",
-                    width: 100
-                },
-
-                {
-                    field: "select",
-                    headerName: "Action",
-                    width: 120,
-                    sortable: false,
-                    filterable: false,
-                    renderCell: this.renderSelectButton
-                }
-
-            ]
         };
+
     }
 
-    loadItems = () => {
-        axios.get("http://localhost:8080/item/getAllItems")
-            .then((response) => {
-                this.setState({
-                    searchResults: response.data
-                });
-            });
-    }
-    
-    componentDidMount() {
-        this.loadItems();
-    }
-    handleSearchResults = (results) => {
 
-        const formattedResults = results.map(
-            (item) => {
+    /*
+     * Search item by Item Code.
+     *
+     * Current backend contract only has
+     * GET /item/getAllItems, so we use that
+     * endpoint and find the requested code.
+     */
 
-                return {
+    handleItemCodeBlur = () => {
 
-                    ...item,
+        const itemCode =
+            this.state.itemCode;
 
-                    id: item.itemCode
 
-                };
+        if (!itemCode) {
+
+            return;
+
+        }
+
+
+        axios.get(
+            "http://localhost:8080/item/getAllItems"
+        )
+
+        .then((response) => {
+
+            const item =
+                response.data.find(
+                    (currentItem) =>
+                        Number(
+                            currentItem.itemCode
+                        ) ===
+                        Number(itemCode)
+                );
+
+
+            if (!item) {
+
+                alert(
+                    "Item not found."
+                );
+
+                return;
 
             }
-        );
 
 
-        this.setState({
+            this.selectItem(
+                item
+            );
 
-            searchResults:
-                formattedResults
+        })
+
+        .catch((error) => {
+
+            console.log(
+                "Item lookup error:",
+                error
+            );
+
+
+            alert(
+                "Unable to find item."
+            );
 
         });
 
     };
 
 
-    renderSelectButton = (params) => {
+    loadAllItems = () => {
+
+        axios.get(
+            "http://localhost:8080/item/getAllItems"
+        )
+
+        .then((response) => {
+
+            this.setState({
+
+                searchResults:
+                    response.data
+
+            });
+
+        })
+
+        .catch((error) => {
+
+            console.log(
+                "Error loading items:",
+                error
+            );
+
+        });
+
+    };
+
+
+    openItemSearch = () => {
+
+        this.loadAllItems();
+
+
+        this.setState({
+
+            openSearchDialog:
+                true
+
+        });
+
+    };
+
+
+    closeItemSearch = () => {
+
+        this.setState({
+
+            openSearchDialog:
+                false
+
+        });
+
+    };
+
+
+    handleSearchResults = (
+        results
+    ) => {
+
+        this.setState({
+
+            searchResults:
+                results
+
+        });
+
+    };
+
+
+    renderSelectButton = (
+        params
+    ) => {
 
         return (
 
             <Button
                 variant="contained"
                 size="small"
-                onClick={() => {
-
-                    this.selectItem(params.row);
-
-                }}
+                onClick={() =>
+                    this.selectItem(
+                        params.row
+                    )
+                }
             >
                 Select
             </Button>
@@ -142,8 +211,12 @@ class SalesItemPage extends React.Component {
         const alreadySelected =
             this.state.selectedItems.some(
                 (selectedItem) =>
-                    selectedItem.itemCode ===
-                    item.itemCode
+                    Number(
+                        selectedItem.itemCode
+                    ) ===
+                    Number(
+                        item.itemCode
+                    )
             );
 
 
@@ -154,27 +227,35 @@ class SalesItemPage extends React.Component {
             );
 
             return;
+
         }
 
 
         const newItem = {
 
-            itemCode: item.itemCode,
+            itemCode:
+                item.itemCode,
 
-            itemName: item.itemName,
+            itemName:
+                item.itemName,
 
             unitOfMeasure:
                 item.unitOfMeasure,
 
-            hsn: item.hsn,
+            hsn:
+                item.hsn,
 
-            quantity: 1,
+            quantity:
+                1,
 
-            rate: item.itemRate,
+            rate:
+                Number(item.itemRate),
 
-            gstPer: item.gstPer,
+            gstPer:
+                Number(item.gstPer),
 
-            amount: item.itemRate
+            amount:
+                Number(item.itemRate)
 
         };
 
@@ -187,7 +268,13 @@ class SalesItemPage extends React.Component {
 
                 newItem
 
-            ]
+            ],
+
+            itemCode:
+                item.itemCode,
+
+            openSearchDialog:
+                false
 
         });
 
@@ -199,17 +286,20 @@ class SalesItemPage extends React.Component {
         quantity
     ) => {
 
+        const newQuantity =
+            Number(quantity);
+
+
         const updatedItems =
             this.state.selectedItems.map(
                 (item) => {
 
                     if (
-                        item.itemCode ===
-                        itemCode
+                        Number(
+                            item.itemCode
+                        ) ===
+                        Number(itemCode)
                     ) {
-
-                        const newQuantity =
-                            Number(quantity);
 
                         return {
 
@@ -225,6 +315,7 @@ class SalesItemPage extends React.Component {
                         };
 
                     }
+
 
                     return item;
 
@@ -242,12 +333,69 @@ class SalesItemPage extends React.Component {
     };
 
 
-    removeItem = (itemCode) => {
+    handleRateChange = (
+        itemCode,
+        rate
+    ) => {
+
+        const newRate =
+            Number(rate);
+
+
+        const updatedItems =
+            this.state.selectedItems.map(
+                (item) => {
+
+                    if (
+                        Number(
+                            item.itemCode
+                        ) ===
+                        Number(itemCode)
+                    ) {
+
+                        return {
+
+                            ...item,
+
+                            rate:
+                                newRate,
+
+                            amount:
+                                Number(item.quantity) *
+                                newRate
+
+                        };
+
+                    }
+
+
+                    return item;
+
+                }
+            );
+
+
+        this.setState({
+
+            selectedItems:
+                updatedItems
+
+        });
+
+    };
+
+
+    removeItem = (
+        itemCode
+    ) => {
 
         const updatedItems =
             this.state.selectedItems.filter(
                 (item) =>
-                    item.itemCode !== itemCode
+                    Number(
+                        item.itemCode
+                    ) !==
+                    Number(itemCode)
             );
 
 
@@ -284,267 +432,704 @@ class SalesItemPage extends React.Component {
 
     handleNext = () => {
 
-        if (
-            this.state.selectedItems.length === 0
-        ) {
+    if (
+        this.state.selectedItems.length === 0
+    ) {
 
-            alert(
-                "Please select at least one item."
-            );
+        alert(
+            "Please select at least one item."
+        );
 
-            return;
-
-        }
-
-
-        this.props.updateSalesData({
-
-            items:
-                this.state.selectedItems
-
-        });
+        return;
+    }
 
 
-        this.props.nextStep();
+    const inventoryRequest = {
 
+        transactionId:
+            this.props.salesData.transactionId,
+
+        items:
+            this.state.selectedItems.map(
+                (item) => {
+
+                    return {
+                        itemCode:
+                            item.itemCode,
+
+                        quantity:
+                            item.quantity
+                    };
+
+                }
+            )
     };
 
 
+    axios.post(
+        "http://localhost:8080/inventory/validate",
+        inventoryRequest
+    )
+        .then(() => {
+
+            /*
+             * Inventory is available.
+             * Now proceed with the normal Step 3 save.
+             */
+
+            this.props.saveStepAndNext(
+
+                {
+                    items:
+                        this.state.selectedItems
+                },
+
+                {
+                    items:
+                        this.state.selectedItems
+                }
+
+            );
+
+        })
+        .catch((error) => {
+
+            console.log(
+                "Inventory validation failed:",
+                error
+            );
+
+
+            let message =
+                "Unable to validate inventory.";
+
+
+            if (
+                error.response &&
+                error.response.data
+            ) {
+
+                message =
+                    error.response.data;
+
+            }
+
+
+            alert(message);
+
+        });
+
+};
+
+
     render() {
+
+        const columns = [
+
+            {
+                field: "itemCode",
+                headerName: "Item Code",
+                width: 120
+            },
+
+            {
+                field: "itemName",
+                headerName: "Item Name",
+                width: 220
+            },
+
+            {
+                field: "unitOfMeasure",
+                headerName: "UOM",
+                width: 100
+            },
+
+            {
+                field: "hsn",
+                headerName: "HSN",
+                width: 140
+            },
+
+            {
+                field: "itemRate",
+                headerName: "Rate",
+                width: 120
+            },
+
+            {
+                field: "gstPer",
+                headerName: "GST %",
+                width: 100
+            },
+
+            {
+                field: "select",
+                headerName: "Action",
+                width: 120,
+                sortable: false,
+                filterable: false,
+                renderCell:
+                    this.renderSelectButton
+            }
+
+        ];
+
 
         return (
 
             <div className="sales-card">
 
-                <h2>Item Selection</h2>
-
-
-                <div className="search-section">
-
-                    <SearchItem
-
-                        onSearchResults={
-                            this.handleSearchResults
-                        }
-
-                    />
-
-                </div>
-
-
-                <div
+                <Typography
+                    variant="h5"
                     style={{
-                        marginTop: "25px"
+                        fontWeight: 600,
+                        color: "#1e293b"
+                    }}
+                >
+                    Item Selection
+                </Typography>
+
+                <Typography
+                    variant="body2"
+                    style={{
+                        color: "#64748b",
+                        marginTop: "5px",
+                        marginBottom: "25px"
+                    }}
+                >
+                    Select items and enter the transaction
+                    quantity and rate.
+                </Typography>
+
+
+                {/* ITEM SEARCH CARD */}
+
+                <Card
+                    elevation={0}
+                    style={{
+                        border:
+                            "1px solid #e2e8f0",
+                        borderRadius: "10px"
                     }}
                 >
 
-                    <h3>Search Results</h3>
+                    <CardContent>
+
+                        <Typography
+                            variant="h6"
+                            style={{
+                                fontWeight: 600,
+                                color: "#1e293b"
+                            }}
+                        >
+                            Item Selection
+                        </Typography>
 
 
-                    <div
-                        style={{
-                            height: 400,
-                            width: "100%"
-                        }}
-                    >
-
-                        <DataGrid
-
-                            rows={
-                                this.state.searchResults
-                            }
-
-                            columns={
-                                this.state.columns
-                            }
-
-                            pageSizeOptions={[
-                                5,
-                                10,
-                                20
-                            ]}
-
+                        <Divider
+                            style={{
+                                marginTop: "15px",
+                                marginBottom: "20px"
+                            }}
                         />
 
-                    </div>
 
-                </div>
+                        <div
+                            style={{
+                                display: "flex",
+                                gap: "15px",
+                                alignItems: "center"
+                            }}
+                        >
 
+                            <TextField
+                                label="Item Code"
+                                type="number"
+                                size="small"
+                                value={
+                                    this.state.itemCode
+                                }
+                                onChange={(event) =>
+                                    this.setState({
 
-                <div
-                    style={{
-                        marginTop: "30px"
-                    }}
-                >
+                                        itemCode:
+                                            event.target.value
 
-                    <h3>Selected Items</h3>
-
-
-                    <table
-                        style={{
-                            width: "100%",
-                            borderCollapse:
-                                "collapse"
-                        }}
-                    >
-
-                        <thead>
-
-                            <tr>
-
-                                <th>Item Code</th>
-
-                                <th>Item Name</th>
-
-                                <th>Qty</th>
-
-                                <th>Rate</th>
-
-                                <th>GST %</th>
-
-                                <th>Amount</th>
-
-                                <th>Action</th>
-
-                            </tr>
-
-                        </thead>
+                                    })
+                                }
+                                onBlur={
+                                    this.handleItemCodeBlur
+                                }
+                                style={{
+                                    width: "200px"
+                                }}
+                            />
 
 
-                        <tbody>
+                            <Button
+                                variant="contained"
+                                onClick={
+                                    this.openItemSearch
+                                }
+                            >
+                                Search Item
+                            </Button>
 
-                            {
-                                this.state.selectedItems.map(
-                                    (item) => (
+                        </div>
 
-                                        <tr
-                                            key={
-                                                item.itemCode
-                                            }
-                                        >
+                    </CardContent>
 
-                                            <td>
-                                                {
-                                                    item.itemCode
-                                                }
-                                            </td>
-
-                                            <td>
-                                                {
-                                                    item.itemName
-                                                }
-                                            </td>
-
-                                            <td>
-
-                                                <TextField
-                                                    type="number"
-                                                    size="small"
-                                                    value={
-                                                        item.quantity
-                                                    }
-                                                    inputProps={{
-                                                        min: 1
-                                                    }}
-                                                    onChange={
-                                                        (event) => {
-
-                                                            this.handleQuantityChange(
-
-                                                                item.itemCode,
-
-                                                                event.target.value
-
-                                                            );
-
-                                                        }
-                                                    }
-                                                />
-
-                                            </td>
-
-                                            <td>
-                                                ₹{" "}
-                                                {
-                                                    item.rate
-                                                }
-                                            </td>
-
-                                            <td>
-                                                {
-                                                    item.gstPer
-                                                }%
-                                            </td>
-
-                                            <td>
-                                                ₹{" "}
-                                                {
-                                                    (
-                                                        Number(
-                                                            item.quantity
-                                                        ) *
-                                                        Number(
-                                                            item.rate
-                                                        )
-                                                    ).toFixed(2)
-                                                }
-                                            </td>
-
-                                            <td>
-
-                                                <Button
-                                                    color="error"
-                                                    onClick={() =>
-                                                        this.removeItem(
-                                                            item.itemCode
-                                                        )
-                                                    }
-                                                >
-                                                    Remove
-                                                </Button>
-
-                                            </td>
-
-                                        </tr>
-
-                                    )
-                                )
-                            }
-
-                        </tbody>
-
-                    </table>
-
-                </div>
+                </Card>
 
 
-                <div
+                {/* SELECTED ITEMS */}
+
+                <Card
+                    elevation={0}
                     style={{
                         marginTop: "20px",
-                        textAlign: "right"
+                        border:
+                            "1px solid #e2e8f0",
+                        borderRadius: "10px"
                     }}
                 >
 
-                    <h3>
+                    <CardContent>
 
-                        Subtotal:
-                        {" "}
-                        ₹
+                        <Typography
+                            variant="h6"
+                            style={{
+                                fontWeight: 600,
+                                color: "#1e293b"
+                            }}
+                        >
+                            Selected Items
+                        </Typography>
+
+
+                        <Divider
+                            style={{
+                                marginTop: "15px",
+                                marginBottom: "20px"
+                            }}
+                        />
+
+
                         {
-                            this.calculateSubtotal()
-                                .toFixed(2)
+                            this.state.selectedItems.length ===
+                            0
+                                ? (
+
+                                    <Typography
+                                        variant="body2"
+                                        style={{
+                                            color:
+                                                "#64748b",
+                                            padding:
+                                                "20px 0"
+                                        }}
+                                    >
+                                        No items selected yet.
+                                    </Typography>
+
+                                )
+                                : (
+
+                                    <div
+                                        style={{
+                                            overflowX:
+                                                "auto"
+                                        }}
+                                    >
+
+                                        <table
+                                            style={{
+                                                width:
+                                                    "100%",
+                                                borderCollapse:
+                                                    "collapse",
+                                                minWidth:
+                                                    "950px"
+                                            }}
+                                        >
+
+                                            <thead>
+
+                                                <tr>
+
+                                                    <th style={
+                                                        this.headerStyle
+                                                    }>
+                                                        Item Code
+                                                    </th>
+
+                                                    <th style={
+                                                        this.headerStyle
+                                                    }>
+                                                        Item Name
+                                                    </th>
+
+                                                    <th style={
+                                                        this.headerStyle
+                                                    }>
+                                                        UOM
+                                                    </th>
+
+                                                    <th style={
+                                                        this.headerStyle
+                                                    }>
+                                                        Qty
+                                                    </th>
+
+                                                    <th style={
+                                                        this.headerStyle
+                                                    }>
+                                                        Rate
+                                                    </th>
+
+                                                    <th style={
+                                                        this.headerStyle
+                                                    }>
+                                                        GST %
+                                                    </th>
+
+                                                    <th style={
+                                                        this.headerStyle
+                                                    }>
+                                                        Sub Amount
+                                                    </th>
+
+                                                    <th style={
+                                                        this.headerStyle
+                                                    }>
+                                                        Action
+                                                    </th>
+
+                                                </tr>
+
+                                            </thead>
+
+
+                                            <tbody>
+
+                                                {
+                                                    this.state
+                                                        .selectedItems
+                                                        .map(
+                                                            (item) => (
+
+                                                                <tr
+                                                                    key={
+                                                                        item.itemCode
+                                                                    }
+                                                                >
+
+                                                                    <td style={
+                                                                        this.cellStyle
+                                                                    }>
+                                                                        {
+                                                                            item.itemCode
+                                                                        }
+                                                                    </td>
+
+
+                                                                    <td style={
+                                                                        this.cellStyle
+                                                                    }>
+                                                                        {
+                                                                            item.itemName
+                                                                        }
+                                                                    </td>
+
+
+                                                                    <td style={
+                                                                        this.cellStyle
+                                                                    }>
+                                                                        {
+                                                                            item.unitOfMeasure
+                                                                        }
+                                                                    </td>
+
+
+                                                                    <td style={
+                                                                        this.cellStyle
+                                                                    }>
+
+                                                                        <TextField
+                                                                            type="number"
+                                                                            size="small"
+                                                                            value={
+                                                                                item.quantity
+                                                                            }
+                                                                            inputProps={{
+                                                                                min: 1
+                                                                            }}
+                                                                            onChange={
+                                                                                (event) =>
+                                                                                    this.handleQuantityChange(
+
+                                                                                        item.itemCode,
+
+                                                                                        event.target.value
+
+                                                                                    )
+                                                                            }
+                                                                            style={{
+                                                                                width:
+                                                                                    "85px"
+                                                                            }}
+                                                                        />
+
+                                                                    </td>
+
+
+                                                                    <td style={
+                                                                        this.cellStyle
+                                                                    }>
+
+                                                                        <TextField
+                                                                            type="number"
+                                                                            size="small"
+                                                                            value={
+                                                                                item.rate
+                                                                            }
+                                                                            inputProps={{
+                                                                                min: 0,
+                                                                                step:
+                                                                                    "0.01"
+                                                                            }}
+                                                                            onChange={
+                                                                                (event) =>
+                                                                                    this.handleRateChange(
+
+                                                                                        item.itemCode,
+
+                                                                                        event.target.value
+
+                                                                                    )
+                                                                            }
+                                                                            style={{
+                                                                                width:
+                                                                                    "110px"
+                                                                            }}
+                                                                        />
+
+                                                                    </td>
+
+
+                                                                    <td style={
+                                                                        this.cellStyle
+                                                                    }>
+                                                                        {
+                                                                            item.gstPer
+                                                                        }%
+                                                                    </td>
+
+
+                                                                    <td
+                                                                        style={{
+                                                                            ...this.cellStyle,
+                                                                            fontWeight:
+                                                                                600
+                                                                        }}
+                                                                    >
+
+                                                                        ₹{" "}
+
+                                                                        {
+                                                                            (
+                                                                                Number(
+                                                                                    item.quantity
+                                                                                ) *
+                                                                                Number(
+                                                                                    item.rate
+                                                                                )
+                                                                            ).toFixed(
+                                                                                2
+                                                                            )
+                                                                        }
+
+                                                                    </td>
+
+
+                                                                    <td style={
+                                                                        this.cellStyle
+                                                                    }>
+
+                                                                        <Button
+                                                                            color="error"
+                                                                            size="small"
+                                                                            onClick={() =>
+                                                                                this.removeItem(
+                                                                                    item.itemCode
+                                                                                )
+                                                                            }
+                                                                        >
+                                                                            Remove
+                                                                        </Button>
+
+                                                                    </td>
+
+                                                                </tr>
+
+                                                            )
+                                                        )
+                                                }
+
+                                            </tbody>
+
+                                        </table>
+
+                                    </div>
+
+                                )
                         }
 
-                    </h3>
 
-                </div>
+                        {
+                            this.state.selectedItems.length >
+                            0 && (
 
+                                <div
+                                    style={{
+                                        marginTop: "20px",
+                                        paddingTop: "15px",
+                                        borderTop:
+                                            "1px solid #e2e8f0",
+                                        textAlign:
+                                            "right"
+                                    }}
+                                >
+
+                                    <Typography
+                                        variant="h6"
+                                        style={{
+                                            fontWeight: 600
+                                        }}
+                                    >
+                                        Subtotal: ₹{" "}
+                                        {
+                                            this
+                                                .calculateSubtotal()
+                                                .toFixed(2)
+                                        }
+                                    </Typography>
+
+                                </div>
+
+                            )
+                        }
+
+                    </CardContent>
+
+                </Card>
+
+
+                {/* ITEM SEARCH DIALOG */}
+
+                <Dialog
+                    open={
+                        this.state.openSearchDialog
+                    }
+                    onClose={
+                        this.closeItemSearch
+                    }
+                    fullWidth
+                    maxWidth="lg"
+                >
+
+                    <DialogTitle>
+                        Search Item
+                    </DialogTitle>
+
+
+                    <DialogContent>
+
+                        <SearchItem
+                            onSearchResults={
+                                this.handleSearchResults
+                            }
+                        />
+
+
+                        <div
+                            style={{
+                                marginTop: "20px"
+                            }}
+                        >
+
+                            <Typography
+                                variant="subtitle1"
+                                style={{
+                                    fontWeight: 600,
+                                    marginBottom:
+                                        "10px"
+                                }}
+                            >
+                                Item List
+                            </Typography>
+
+
+                            <div
+                                style={{
+                                    height: 400,
+                                    width: "100%"
+                                }}
+                            >
+
+                                <DataGrid
+
+                                    rows={
+                                        this.state.searchResults
+                                    }
+
+                                    columns={
+                                        columns
+                                    }
+
+                                    getRowId={
+                                        (row) =>
+                                            row.itemCode
+                                    }
+
+                                    pageSizeOptions={[
+                                        5,
+                                        10,
+                                        20
+                                    ]}
+
+                                />
+
+                            </div>
+
+                        </div>
+
+                    </DialogContent>
+
+
+                    <DialogActions>
+
+                        <Button
+                            onClick={
+                                this.closeItemSearch
+                            }
+                        >
+                            Close
+                        </Button>
+
+                    </DialogActions>
+
+                </Dialog>
+
+
+                {/* NAVIGATION */}
 
                 <div
                     style={{
                         marginTop: "25px",
                         display: "flex",
-                        justifyContent: "space-between"
+                        justifyContent:
+                            "space-between"
                     }}
                 >
 
@@ -572,7 +1157,51 @@ class SalesItemPage extends React.Component {
             </div>
 
         );
+
     }
+
+
+    headerStyle = {
+
+        textAlign: "left",
+
+        padding:
+            "12px 10px",
+
+        backgroundColor:
+            "#f8fafc",
+
+        color:
+            "#475569",
+
+        fontSize:
+            "13px",
+
+        fontWeight:
+            600,
+
+        borderBottom:
+            "1px solid #e2e8f0"
+
+    };
+
+
+    cellStyle = {
+
+        padding:
+            "12px 10px",
+
+        color:
+            "#334155",
+
+        fontSize:
+            "14px",
+
+        borderBottom:
+            "1px solid #f1f5f9"
+
+    };
+
 }
 
 export default SalesItemPage;

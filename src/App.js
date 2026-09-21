@@ -6,6 +6,11 @@ import ItemPage from "./ItemPage";
 import AddItem from "./AddItem";
 import PartyPage from "./PartyPage";
 import SalesPage from "./SalesPage";
+import SalesPageWithNavigation from "./SalesPageWithNavigation";
+import SalesQueuePage from "./SalesQueuePage";
+import PurchaseQueuePage from "./PurchaseQueue";
+import PurchasePage from "./PurchasePage";
+
 // import your other pages here
 
 class App extends React.Component {
@@ -27,19 +32,27 @@ class App extends React.Component {
                         />
 
                         {/* Other pages */}
+
                         <Route
                             path="sales"
-                            element={<div><SalesPage /></div>}
+                            element={<SalesQueuePage />}
                         />
+
+                        <Route path="/sales/:transactionNo" element={<SalesPageWithNavigation />} />
 
                         <Route
                             path="purchases"
-                            element={<div>Purchases</div>}
+                            element={<PurchaseQueuePage />}
+                        />
+
+                        <Route
+                            path="purchases/:transactionId"
+                            element={<PurchasePage />}
                         />
 
                         <Route
                             path="party"
-                            element={<PartyPage/>}
+                            element={<PartyPage />}
                         />
 
                         <Route
@@ -47,8 +60,8 @@ class App extends React.Component {
                             element={<div>Invoice</div>}
                         />
                         <Route
-                          path="addItem"
-                          element={<AddItem/>}
+                            path="addItem"
+                            element={<AddItem />}
                         />
 
                     </Route>
