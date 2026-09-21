@@ -1,14 +1,22 @@
 import React from "react";
+import axios from "axios";
 
 import {
     DataGrid
 } from "@mui/x-data-grid";
 
 import {
-    Button
+    Button,
+    TextField,
+    Card,
+    CardContent,
+    Typography,
+    Divider,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions
 } from "@mui/material";
-
-import axios from "axios";
 
 import SearchParty from "./SearchParty";
 
@@ -20,172 +28,97 @@ class SalesPartyPage extends React.Component {
 
         this.state = {
 
-            searchResults: [],
+            partyCode:
+                this.props.salesData.party
+                    ? this.props.salesData.party.partyCode
+                    : "",
 
             selectedParty:
                 this.props.salesData.party || null,
 
-            columns: [
+            searchResults: [],
 
-                {
-                    field: "partyCode",
-                    headerName: "Party Code",
-                    width: 120
-                },
-
-                {
-                    field: "partyName",
-                    headerName: "Party Name",
-                    width: 220
-                },
-
-                {
-                    field: "partyState",
-                    headerName: "State",
-                    width: 150
-                },
-
-                {
-                    field: "gstNo",
-                    headerName: "GST No",
-                    width: 180
-                },
-
-                {
-                    field: "contactNo",
-                    headerName: "Contact No",
-                    width: 150
-                },
-
-                {
-                    field: "select",
-                    headerName: "Action",
-                    width: 120,
-                    sortable: false,
-                    filterable: false,
-                    renderCell: this.renderSelectButton
-                }
-            ]
+            openSearchDialog: false
         };
+
     }
 
 
-    /*
-     * This function makes sure every party
-     * has an id property before going to DataGrid
-     */
-    formatParties = (parties) => {
+    handlePartyCodeBlur = () => {
 
-        return parties.map((party) => {
-
-            return {
-
-                ...party,
-
-                id: party.partyCode
-
-            };
-
-        });
-
-    };
+        const partyCode =
+            this.state.partyCode;
 
 
-    /*
-     * Called by SearchParty
-     */
-    handleSearchResults = (results) => {
-
-        const formattedParties =
-            this.formatParties(results);
-
-        console.log(
-            "Search Results:",
-            formattedParties
-        );
-
-        this.setState({
-
-            searchResults:
-                formattedParties
-
-        });
-
-    };
-
-
-    /*
-     * Select button inside DataGrid
-     */
-    renderSelectButton = (params) => {
-
-        return (
-
-            <Button
-                variant="contained"
-                size="small"
-                onClick={() => {
-
-                    this.selectParty(params.row);
-
-                }}
-            >
-                Select
-            </Button>
-
-        );
-
-    };
-
-
-    /*
-     * Store selected party
-     */
-    selectParty = (party) => {
-
-        this.setState({
-
-            selectedParty:
-                party
-
-        });
-
-    };
-
-
-    /*
-     * Validate and move to next page
-     */
-    handleNext = () => {
-
-        if (!this.state.selectedParty) {
-
-            alert(
-                "Please select a party before continuing."
-            );
+        if (!partyCode) {
 
             return;
 
         }
 
 
-        this.props.updateSalesData({
+        axios.get(
+            `http://localhost:8080/party/getPartyById?id=${partyCode}`
+        )
 
-            party:
-                this.state.selectedParty
+        .then((response) => {
+
+            if (
+                !response.data ||
+                !response.data.partyCode
+            ) {
+
+                alert(
+                    "Party not found."
+                );
+
+                this.setState({
+
+                    selectedParty:
+                        null
+
+                });
+
+                return;
+
+            }
+
+
+            this.setState({
+
+                selectedParty:
+                    response.data
+
+            });
+
+        })
+
+        .catch((error) => {
+
+            console.log(
+                "Party lookup error:",
+                error
+            );
+
+
+            this.setState({
+
+                selectedParty:
+                    null
+
+            });
+
+
+            alert(
+                "Party not found."
+            );
 
         });
-
-
-        this.props.nextStep();
 
     };
 
 
-    /*
-     * Initial loading of all parties
-     */
-    loadParties = () => {
+    loadAllParties = () => {
 
         axios.get(
             "http://localhost:8080/party/getAllParty"
@@ -193,18 +126,10 @@ class SalesPartyPage extends React.Component {
 
         .then((response) => {
 
-            const formattedParties =
-                this.formatParties(response.data);
-
-            console.log(
-                "Initial Party Load:",
-                formattedParties
-            );
-
             this.setState({
 
                 searchResults:
-                    formattedParties
+                    response.data
 
             });
 
@@ -222,137 +147,484 @@ class SalesPartyPage extends React.Component {
     };
 
 
-    componentDidMount() {
+    openPartySearch = () => {
 
-        this.loadParties();
+        this.loadAllParties();
 
-    }
+
+        this.setState({
+
+            openSearchDialog:
+                true
+
+        });
+
+    };
+
+
+    closePartySearch = () => {
+
+        this.setState({
+
+            openSearchDialog:
+                false
+
+        });
+
+    };
+
+
+    handleSearchResults = (
+        results
+    ) => {
+
+        this.setState({
+
+            searchResults:
+                results
+
+        });
+
+    };
+
+
+    selectParty = (party) => {
+
+        this.setState({
+
+            selectedParty:
+                party,
+
+            partyCode:
+                party.partyCode,
+
+            openSearchDialog:
+                false
+
+        });
+
+    };
+
+
+    renderSelectButton = (
+        params
+    ) => {
+
+        return (
+
+            <Button
+                variant="contained"
+                size="small"
+                onClick={() =>
+                    this.selectParty(
+                        params.row
+                    )
+                }
+            >
+                Select
+            </Button>
+
+        );
+
+    };
+
+
+    handleNext = () => {
+
+        if (!this.state.selectedParty) {
+
+            alert(
+                "Please select a party before continuing."
+            );
+
+            return;
+
+        }
+
+
+        const apiData = {
+
+            partyCode:
+                this.state.selectedParty.partyCode
+
+        };
+
+
+        const localData = {
+
+            party:
+                this.state.selectedParty
+
+        };
+
+
+        this.props.saveStepAndNext(
+
+            apiData,
+
+            localData
+
+        );
+
+    };
 
 
     render() {
+
+        const party =
+            this.state.selectedParty;
+
+
+        const columns = [
+
+            {
+                field: "partyCode",
+                headerName: "Party Code",
+                width: 120
+            },
+
+            {
+                field: "partyName",
+                headerName: "Party Name",
+                width: 220
+            },
+
+            {
+                field: "partyState",
+                headerName: "State",
+                width: 150
+            },
+
+            {
+                field: "gstNo",
+                headerName: "GST No",
+                width: 180
+            },
+
+            {
+                field: "contactNo",
+                headerName: "Contact No",
+                width: 150
+            },
+
+            {
+                field: "select",
+                headerName: "Action",
+                width: 120,
+                sortable: false,
+                filterable: false,
+                renderCell:
+                    this.renderSelectButton
+            }
+
+        ];
+
 
         return (
 
             <div className="sales-card">
 
-                <h2>
+                <Typography
+                    variant="h5"
+                    style={{
+                        fontWeight: 600,
+                        color: "#1e293b"
+                    }}
+                >
                     Party Selection
-                </h2>
+                </Typography>
+
+                <Typography
+                    variant="body2"
+                    style={{
+                        color: "#64748b",
+                        marginTop: "5px",
+                        marginBottom: "25px"
+                    }}
+                >
+                    Select the party associated with this
+                    sales transaction.
+                </Typography>
 
 
-                {/* SELECTED PARTY */}
+                {/* PARTY SEARCH CARD */}
 
-                {
-                    this.state.selectedParty && (
+                <Card
+                    elevation={0}
+                    style={{
+                        border:
+                            "1px solid #e2e8f0",
+                        borderRadius: "10px"
+                    }}
+                >
+
+                    <CardContent>
+
+                        <Typography
+                            variant="h6"
+                            style={{
+                                fontWeight: 600,
+                                color: "#1e293b"
+                            }}
+                        >
+                            Party Selection
+                        </Typography>
+
+
+                        <Divider
+                            style={{
+                                marginTop: "15px",
+                                marginBottom: "20px"
+                            }}
+                        />
+
 
                         <div
                             style={{
-                                marginTop: "20px",
-                                padding: "15px",
-                                border: "1px solid #ddd",
-                                borderRadius: "8px"
+                                display: "flex",
+                                gap: "15px",
+                                alignItems: "center"
                             }}
                         >
 
-                            <h3>
-                                Selected Party
-                            </h3>
-
-                            <p>
-                                <b>Party Code:</b>{" "}
-                                {
-                                    this.state.selectedParty
-                                        .partyCode
+                            <TextField
+                                label="Party Code"
+                                type="number"
+                                size="small"
+                                value={
+                                    this.state.partyCode
                                 }
-                            </p>
+                                onChange={(event) =>
+                                    this.setState({
 
-                            <p>
-                                <b>Party Name:</b>{" "}
-                                {
-                                    this.state.selectedParty
-                                        .partyName
-                                }
-                            </p>
+                                        partyCode:
+                                            event.target.value
 
-                            <p>
-                                <b>GST No:</b>{" "}
-                                {
-                                    this.state.selectedParty
-                                        .gstNo
+                                    })
                                 }
-                            </p>
+                                onBlur={
+                                    this.handlePartyCodeBlur
+                                }
+                                style={{
+                                    width: "200px"
+                                }}
+                            />
+
+
+                            <Button
+                                variant="contained"
+                                onClick={
+                                    this.openPartySearch
+                                }
+                            >
+                                Search Party
+                            </Button>
 
                         </div>
 
-                    )
-                }
+
+                        {/* SELECTED PARTY */}
+
+                        {
+                            party && (
+
+                                <div
+                                    style={{
+                                        marginTop: "25px",
+                                        padding: "20px",
+                                        backgroundColor:
+                                            "#f8fafc",
+                                        borderRadius: "8px"
+                                    }}
+                                >
+
+                                    <Typography
+                                        variant="subtitle1"
+                                        style={{
+                                            fontWeight: 600,
+                                            marginBottom: "15px"
+                                        }}
+                                    >
+                                        Selected Party
+                                    </Typography>
 
 
-                {/* SEARCH PARTY */}
+                                    <div
+                                        style={{
+                                            display: "grid",
+                                            gridTemplateColumns:
+                                                "1fr 1fr",
+                                            gap:
+                                                "12px 30px"
+                                        }}
+                                    >
 
-                <div
-                    className="search-section"
-                    style={{
-                        marginTop: "20px"
-                    }}
-                >
+                                        <Typography>
+                                            <b>
+                                                Party Code:
+                                            </b>{" "}
+                                            {
+                                                party.partyCode
+                                            }
+                                        </Typography>
 
-                    <SearchParty
 
-                        onSearchResults={
-                            this.handleSearchResults
+                                        <Typography>
+                                            <b>
+                                                Party Name:
+                                            </b>{" "}
+                                            {
+                                                party.partyName
+                                            }
+                                        </Typography>
+
+
+                                        <Typography>
+                                            <b>
+                                                Contact:
+                                            </b>{" "}
+                                            {
+                                                party.contactNo
+                                            }
+                                        </Typography>
+
+
+                                        <Typography>
+                                            <b>
+                                                GST No:
+                                            </b>{" "}
+                                            {
+                                                party.gstNo
+                                            }
+                                        </Typography>
+
+
+                                        <Typography>
+                                            <b>
+                                                State:
+                                            </b>{" "}
+                                            {
+                                                party.partyState
+                                            }
+                                        </Typography>
+
+
+                                        <Typography>
+                                            <b>
+                                                Payment Terms:
+                                            </b>{" "}
+                                            {
+                                                party.paymentTerms
+                                            }
+                                        </Typography>
+
+                                    </div>
+
+                                </div>
+
+                            )
                         }
 
-                    />
+                    </CardContent>
 
-                </div>
+                </Card>
 
 
-                {/* RESULTS */}
+                {/* SEARCH PARTY DIALOG */}
 
-                <div
-                    style={{
-                        marginTop: "25px"
-                    }}
+                <Dialog
+                    open={
+                        this.state.openSearchDialog
+                    }
+                    onClose={
+                        this.closePartySearch
+                    }
+                    fullWidth
+                    maxWidth="lg"
                 >
 
-                    <h3>
-                        Available Parties
-                    </h3>
+                    <DialogTitle>
+                        Search Party
+                    </DialogTitle>
 
 
-                    <div
-                        style={{
-                            height: 400,
-                            width: "100%"
-                        }}
-                    >
+                    <DialogContent>
 
-                        <DataGrid
-
-                            rows={
-                                this.state.searchResults
+                        <SearchParty
+                            onSearchResults={
+                                this.handleSearchResults
                             }
-
-                            columns={
-                                this.state.columns
-                            }
-
-                            getRowId={
-                                (row) => row.id
-                            }
-
-                            pageSizeOptions={[
-                                5,
-                                10,
-                                20
-                            ]}
-
                         />
 
-                    </div>
 
-                </div>
+                        <div
+                            style={{
+                                marginTop: "20px"
+                            }}
+                        >
+
+                            <Typography
+                                variant="subtitle1"
+                                style={{
+                                    fontWeight: 600,
+                                    marginBottom:
+                                        "10px"
+                                }}
+                            >
+                                Party List
+                            </Typography>
+
+
+                            <div
+                                style={{
+                                    height: 400,
+                                    width: "100%"
+                                }}
+                            >
+
+                                <DataGrid
+
+                                    rows={
+                                        this.state.searchResults
+                                    }
+
+                                    columns={
+                                        columns
+                                    }
+
+                                    getRowId={
+                                        (row) =>
+                                            row.partyCode
+                                    }
+
+                                    pageSizeOptions={[
+                                        5,
+                                        10,
+                                        20
+                                    ]}
+
+                                />
+
+                            </div>
+
+                        </div>
+
+                    </DialogContent>
+
+
+                    <DialogActions>
+
+                        <Button
+                            onClick={
+                                this.closePartySearch
+                            }
+                        >
+                            Close
+                        </Button>
+
+                    </DialogActions>
+
+                </Dialog>
 
 
                 {/* NAVIGATION */}
@@ -361,7 +633,8 @@ class SalesPartyPage extends React.Component {
                     style={{
                         marginTop: "25px",
                         display: "flex",
-                        justifyContent: "space-between"
+                        justifyContent:
+                            "space-between"
                     }}
                 >
 
@@ -391,6 +664,7 @@ class SalesPartyPage extends React.Component {
         );
 
     }
+
 }
 
 export default SalesPartyPage;

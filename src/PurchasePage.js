@@ -2,19 +2,21 @@ import React from "react";
 import axios from "axios";
 
 import {
-    Typography,
     Card,
-    CardContent
+    CardContent,
+    Typography
 } from "@mui/material";
 
-import SalesProgress from "./SalesProgress";
-import SalesTransactionPage from "./SalesTransactionPage";
-import SalesPartyPage from "./SalesPartyPage";
-import SalesItemPage from "./SalesItemPage";
-import SalesSummaryPage from "./SalesSummaryPage";
+import PurchaseProgress from "./PurchaseProgress";
+import PurchaseTransactionPage from "./PurchaseTransactionPage";
+import PurchaseSupplierPage from "./PurchaseSupplierPage";
+import PurchaseItemPage from "./PurchaseItemPage";
+import PurchaseSummaryPage from "./PurchaseSummaryPage";
+
+import "./Purchase.css";
 
 
-class SalesPage extends React.Component {
+class PurchasePage extends React.Component {
 
     constructor(props) {
         super(props);
@@ -27,7 +29,7 @@ class SalesPage extends React.Component {
 
             step: 1,
 
-            salesData: {
+            purchaseData: {
 
                 transactionId: null,
 
@@ -35,7 +37,7 @@ class SalesPage extends React.Component {
 
                 transactionDate: "",
 
-                transactionType: "SALES",
+                transactionType: "PURCHASE",
 
                 paymentTerms: "",
 
@@ -51,7 +53,7 @@ class SalesPage extends React.Component {
 
                 poDate: "",
 
-                party: null,
+                supplier: null,
 
                 items: [],
 
@@ -60,20 +62,12 @@ class SalesPage extends React.Component {
                 gstAmount: 0,
 
                 totalAmount: 0
-            }
 
+            }
         };
     }
 
 
-    /*
-     * Gets the transaction ID from:
-     *
-     * http://localhost:3000/sales/32
-     *
-     * Result:
-     * 32
-     */
     getTransactionIdFromUrl = () => {
 
         const parts =
@@ -85,12 +79,6 @@ class SalesPage extends React.Component {
     };
 
 
-    /*
-     * When SalesPage opens, we NEVER create
-     * a new transaction.
-     *
-     * We only claim/load an existing one.
-     */
     componentDidMount() {
 
         const transactionId =
@@ -100,7 +88,8 @@ class SalesPage extends React.Component {
 
             this.setState({
                 loading: false,
-                error: "Transaction ID is missing."
+                error:
+                    "Transaction ID is missing."
             });
 
             return;
@@ -110,9 +99,6 @@ class SalesPage extends React.Component {
     }
 
 
-    /*
-     * Fetch existing transaction from backend.
-     */
     claimTransaction = (transactionId) => {
 
         this.setState({
@@ -120,43 +106,38 @@ class SalesPage extends React.Component {
             error: ""
         });
 
+
         axios.get(
-            `http://localhost:8080/sales/claim/${transactionId}`
+            `http://localhost:8080/purchase/claim/${transactionId}`
         )
             .then((response) => {
 
                 console.log(
-                    "Claimed Sales transaction:",
+                    "Claimed Purchase transaction:",
                     response.data
                 );
 
-                const data = response.data;
 
+                const data =
+                    response.data;
 
-                /*
-                 * Expected response:
-                 *
-                 * {
-                 *     transaction: {...},
-                 *     details: [...],
-                 *     party: {...}
-                 * }
-                 */
 
                 const transaction =
                     data.transaction || data;
 
+
                 const details =
-                    data.details || data.items || [];
+                    data.details ||
+                    data.items ||
+                    [];
 
-                const party =
-                    data.party || null;
+
+                const supplier =
+                    data.party ||
+                    data.supplier ||
+                    null;
 
 
-                /*
-                 * Convert backend transaction details
-                 * into the structure used by SalesItemPage.
-                 */
                 const items =
                     details.map((detail) => {
 
@@ -193,7 +174,6 @@ class SalesPage extends React.Component {
                                 detail.inclusiveAmount
 
                         };
-
                     });
 
 
@@ -206,7 +186,7 @@ class SalesPage extends React.Component {
                     step:
                         transaction.currentStep || 1,
 
-                    salesData: {
+                    purchaseData: {
 
                         transactionId:
                             transaction.transactionId,
@@ -218,19 +198,23 @@ class SalesPage extends React.Component {
                             transaction.transactionDate || "",
 
                         transactionType:
-                            transaction.transactionType || "SALES",
+                            transaction.transactionType ||
+                            "PURCHASE",
 
                         paymentTerms:
                             transaction.paymentTerms || "",
 
                         paymentDueDate:
-                            transaction.paymentDueDate || null,
+                            transaction.paymentDueDate ||
+                            null,
 
                         deliveryMode:
-                            transaction.deliveryMode || "",
+                            transaction.deliveryMode ||
+                            "",
 
                         deliveryPaymentTerms:
-                            transaction.deliveryPaymentTerms || "",
+                            transaction.deliveryPaymentTerms ||
+                            "",
 
                         poDetails:
                             transaction.poDetails || "",
@@ -241,8 +225,8 @@ class SalesPage extends React.Component {
                         poDate:
                             transaction.poDate || "",
 
-                        party:
-                            party,
+                        supplier:
+                            supplier,
 
                         items:
                             items,
@@ -264,13 +248,13 @@ class SalesPage extends React.Component {
             .catch((error) => {
 
                 console.log(
-                    "Unable to claim Sales transaction:",
+                    "Unable to claim Purchase transaction:",
                     error
                 );
 
 
                 let message =
-                    "Unable to load Sales transaction.";
+                    "Unable to load Purchase transaction.";
 
 
                 if (
@@ -292,9 +276,7 @@ class SalesPage extends React.Component {
 
                         message =
                             error.response.data.message;
-
                     }
-
                 }
 
 
@@ -307,16 +289,9 @@ class SalesPage extends React.Component {
                 });
 
             });
-
     };
 
 
-    /*
-     * Called by every Sales step.
-     *
-     * This does NOT create a transaction.
-     * It updates the already existing transaction.
-     */
     saveStepAndNext = (
         apiData,
         localData = {}
@@ -326,7 +301,10 @@ class SalesPage extends React.Component {
             this.state.step;
 
 
-        if (!this.state.salesData.transactionId) {
+        if (
+            !this.state.purchaseData
+                .transactionId
+        ) {
 
             alert(
                 "Transaction ID is missing."
@@ -339,20 +317,20 @@ class SalesPage extends React.Component {
         const request = {
 
             transactionId:
-                this.state.salesData.transactionId,
+                this.state.purchaseData
+                    .transactionId,
 
             step:
                 currentStep,
 
             data:
                 apiData
-
         };
 
 
         axios.post(
 
-            "http://localhost:8080/sales/next",
+            "http://localhost:8080/purchase/next",
 
             request
 
@@ -360,7 +338,7 @@ class SalesPage extends React.Component {
             .then((response) => {
 
                 console.log(
-                    "Sales step response:",
+                    "Purchase step response:",
                     response.data
                 );
 
@@ -374,9 +352,9 @@ class SalesPage extends React.Component {
                     step:
                         transaction.currentStep,
 
-                    salesData: {
+                    purchaseData: {
 
-                        ...this.state.salesData,
+                        ...this.state.purchaseData,
 
                         ...localData,
 
@@ -385,7 +363,8 @@ class SalesPage extends React.Component {
 
                         transactionNo:
                             transaction.transactionNo ||
-                            this.state.salesData.transactionNo,
+                            this.state.purchaseData
+                                .transactionNo,
 
                         transactionDate:
                             transaction.transactionDate,
@@ -428,11 +407,10 @@ class SalesPage extends React.Component {
                 });
 
             })
-
             .catch((error) => {
 
                 console.log(
-                    "Error while processing Sales step:",
+                    "Error while processing Purchase step:",
                     error
                 );
 
@@ -460,23 +438,16 @@ class SalesPage extends React.Component {
 
                         message =
                             error.response.data.message;
-
                     }
-
                 }
 
 
                 alert(message);
 
             });
-
     };
 
 
-    /*
-     * Back only changes the screen.
-     * It does not delete backend data.
-     */
     previousStep = () => {
 
         if (this.state.step > 1) {
@@ -487,41 +458,26 @@ class SalesPage extends React.Component {
                     this.state.step - 1
 
             });
-
         }
-
     };
 
 
     render() {
 
-        /*
-         * Loading while Claim API is running.
-         */
         if (this.state.loading) {
 
             return (
 
-                <div className="sales-card">
+                <div className="purchase-card">
 
-                    <Card
-                        elevation={0}
-                        style={{
-                            border:
-                                "1px solid #e2e8f0",
-                            borderRadius: "10px"
-                        }}
-                    >
+                    <Card>
 
                         <CardContent>
 
-                            <Typography
-                                variant="h6"
-                                style={{
-                                    color: "#1e293b"
-                                }}
-                            >
-                                Loading Sales Transaction...
+                            <Typography variant="h6">
+
+                                Loading Purchase Transaction...
+
                             </Typography>
 
                         </CardContent>
@@ -529,29 +485,17 @@ class SalesPage extends React.Component {
                     </Card>
 
                 </div>
-
             );
-
         }
 
 
-        /*
-         * Claim failed.
-         */
         if (this.state.error) {
 
             return (
 
-                <div className="sales-card">
+                <div className="purchase-card">
 
-                    <Card
-                        elevation={0}
-                        style={{
-                            border:
-                                "1px solid #e2e8f0",
-                            borderRadius: "10px"
-                        }}
-                    >
+                    <Card>
 
                         <CardContent>
 
@@ -567,15 +511,10 @@ class SalesPage extends React.Component {
                     </Card>
 
                 </div>
-
             );
-
         }
 
 
-        /*
-         * Step 1
-         */
         switch (this.state.step) {
 
             case 1:
@@ -584,14 +523,14 @@ class SalesPage extends React.Component {
 
                     <div>
 
-                        <SalesProgress
+                        <PurchaseProgress
                             step={1}
                         />
 
-                        <SalesTransactionPage
+                        <PurchaseTransactionPage
 
-                            salesData={
-                                this.state.salesData
+                            purchaseData={
+                                this.state.purchaseData
                             }
 
                             saveStepAndNext={
@@ -601,27 +540,23 @@ class SalesPage extends React.Component {
                         />
 
                     </div>
-
                 );
 
 
-            /*
-             * Step 2
-             */
             case 2:
 
                 return (
 
                     <div>
 
-                        <SalesProgress
+                        <PurchaseProgress
                             step={2}
                         />
 
-                        <SalesPartyPage
+                        <PurchaseSupplierPage
 
-                            salesData={
-                                this.state.salesData
+                            purchaseData={
+                                this.state.purchaseData
                             }
 
                             saveStepAndNext={
@@ -635,27 +570,23 @@ class SalesPage extends React.Component {
                         />
 
                     </div>
-
                 );
 
 
-            /*
-             * Step 3
-             */
             case 3:
 
                 return (
 
                     <div>
 
-                        <SalesProgress
+                        <PurchaseProgress
                             step={3}
                         />
 
-                        <SalesItemPage
+                        <PurchaseItemPage
 
-                            salesData={
-                                this.state.salesData
+                            purchaseData={
+                                this.state.purchaseData
                             }
 
                             saveStepAndNext={
@@ -669,32 +600,28 @@ class SalesPage extends React.Component {
                         />
 
                     </div>
-
                 );
 
 
-            /*
-             * Step 4
-             */
             case 4:
 
                 return (
 
                     <div>
 
-                        <SalesProgress
+                        <PurchaseProgress
                             step={4}
                         />
 
-                        <SalesSummaryPage
+                        <PurchaseSummaryPage
 
                             transactionId={
-                                this.state.salesData
+                                this.state.purchaseData
                                     .transactionId
                             }
 
-                            salesData={
-                                this.state.salesData
+                            purchaseData={
+                                this.state.purchaseData
                             }
 
                             previousStep={
@@ -704,46 +631,14 @@ class SalesPage extends React.Component {
                         />
 
                     </div>
-
                 );
 
 
             default:
 
-                return (
-
-                    <div className="sales-card">
-
-                        <Card
-                            elevation={0}
-                            style={{
-                                border:
-                                    "1px solid #e2e8f0",
-                                borderRadius: "10px"
-                            }}
-                        >
-
-                            <CardContent>
-
-                                <Typography
-                                    variant="h6"
-                                    color="error"
-                                >
-                                    Invalid Sales transaction step.
-                                </Typography>
-
-                            </CardContent>
-
-                        </Card>
-
-                    </div>
-
-                );
-
+                return null;
         }
-
     }
-
 }
 
-export default SalesPage;
+export default PurchasePage;

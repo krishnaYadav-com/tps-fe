@@ -2,6 +2,8 @@ import React from "react";
 import { Link } from "react-router-dom";
 import MenuIcon from '@mui/icons-material/Menu';
 import Drawer from '@mui/material/Drawer';
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 class Sidebar extends React.Component {
   render() {
@@ -20,6 +22,39 @@ class Sidebar extends React.Component {
       </div>
     );
   }
+  handleSalesClick = () => {
+
+    axios.post(
+        "http://localhost:8080/sales/start"
+    )
+
+    .then((response) => {
+
+        const transactionId =
+            response.data.transactionId;
+
+
+        this.props.navigate(
+            `/sales/${transactionId}`
+        );
+
+    })
+
+    .catch((error) => {
+
+        console.log(
+            "Unable to start Sales transaction:",
+            error
+        );
+
+
+        alert(
+            "Unable to start Sales transaction."
+        );
+
+    });
+
+};
 }
 
 export default Sidebar;

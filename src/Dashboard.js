@@ -2,7 +2,7 @@ import "./Dashboard.css";
 import React from "react";
 import Drawer from "@mui/material/Drawer";
 import MenuIcon from "@mui/icons-material/Menu";
-import { Link, Outlet } from "react-router-dom";
+import { Link, Outlet, Navigate } from "react-router-dom";
 
 class Dashboard extends React.Component {
 
@@ -10,7 +10,8 @@ class Dashboard extends React.Component {
         super(props);
 
         this.state = {
-            drawerOpen: false
+            drawerOpen: false,
+            transactionNo: null
         };
     }
 
@@ -26,9 +27,64 @@ class Dashboard extends React.Component {
         });
     };
 
+    // handleSalesClick = (event) => {
+
+    //     event.preventDefault();
+
+    //     axios.post(
+    //         "http://localhost:8080/sales/start"
+    //     )
+    //         .then((response) => {
+
+    //             const transactionNo =
+    //                 response.data.transactionNo;
+
+    //             console.log(
+    //                 "Sales transaction created:",
+    //                 transactionNo
+    //             );
+
+    //             this.setState({
+    //                 transactionId: transactionNo,
+    //                 drawerOpen: false
+    //             });
+
+    //         })
+    //         .catch((error) => {
+
+    //             console.log(
+    //                 "Unable to start Sales transaction:",
+    //                 error
+    //             );
+
+    //             alert(
+    //                 "Unable to start Sales transaction."
+    //             );
+    //         });
+    // };
+
     render() {
+
+        const salesPath = this.state.transactionId
+            ? `/sales/${this.state.transactionId}`
+            : null;
+
+        const currentPath = window.location.pathname;
+
+        const shouldNavigate =
+            salesPath &&
+            currentPath !== salesPath;
+
         return (
             <div className="dashboard-wrapper">
+
+                {/* Navigate only when required */}
+                {shouldNavigate && (
+                    <Navigate
+                        to={salesPath}
+                        replace
+                    />
+                )}
 
                 {/* Common Header */}
                 <div className="dashboard-header">
@@ -45,7 +101,6 @@ class Dashboard extends React.Component {
                     </h1>
 
                 </div>
-
 
                 {/* Common Drawer */}
                 <Drawer
@@ -79,7 +134,6 @@ class Dashboard extends React.Component {
                                     Item
                                 </Link>
                             </li>
-
                             <li>
                                 <Link
                                     to="/sales"
@@ -125,7 +179,6 @@ class Dashboard extends React.Component {
                     </div>
 
                 </Drawer>
-
 
                 {/* Current Page */}
                 <div className="dashboard-content">

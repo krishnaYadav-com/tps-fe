@@ -3,7 +3,11 @@ import React from "react";
 import {
     Button,
     TextField,
-    MenuItem
+    MenuItem,
+    Card,
+    CardContent,
+    Typography,
+    Divider
 } from "@mui/material";
 
 
@@ -12,20 +16,16 @@ class SalesTransactionPage extends React.Component {
     constructor(props) {
         super(props);
 
-        const today = this.getTodayDate();
-
         this.state = {
 
             transactionDate:
-                this.props.salesData.transactionDate ||
-                today,
+                this.props.salesData.transactionDate || "",
 
             paymentTerms:
                 this.props.salesData.paymentTerms || "",
 
             paymentDueDate:
-                this.props.salesData.paymentDueDate ||
-                null,
+                this.props.salesData.paymentDueDate || null,
 
             deliveryMode:
                 this.props.salesData.deliveryMode || "",
@@ -40,80 +40,56 @@ class SalesTransactionPage extends React.Component {
                 this.props.salesData.poNumber || "",
 
             poDate:
-                this.props.salesData.poDate ||
-                today
+                this.props.salesData.poDate || ""
+
         };
+
     }
 
 
     getTodayDate = () => {
 
-        const today = new Date();
+        const today =
+            new Date();
 
-        const year = today.getFullYear();
+        const year =
+            today.getFullYear();
 
         const month =
-            String(today.getMonth() + 1)
-                .padStart(2, "0");
+            String(
+                today.getMonth() + 1
+            ).padStart(2, "0");
 
         const day =
-            String(today.getDate())
-                .padStart(2, "0");
+            String(
+                today.getDate()
+            ).padStart(2, "0");
 
-        return `${year}-${month}-${day}`;
+        return (
+            `${year}-${month}-${day}`
+        );
+
     };
 
 
-    calculateDueDate = (paymentTerms) => {
+    addDays = (
+        dateString,
+        days
+    ) => {
 
-        const invoiceDate =
-            this.state.transactionDate;
-
-
-        if (paymentTerms === "Advance") {
-
-            return null;
-
-        }
-
-
-        if (paymentTerms === "Against Delivery") {
-
-            return invoiceDate;
-
-        }
-
-
-        if (paymentTerms === "30 Days") {
-
-            return this.addDays(invoiceDate, 30);
-
-        }
-
-
-        if (paymentTerms === "45 Days") {
-
-            return this.addDays(invoiceDate, 45);
-
-        }
-
-
-        return null;
-    };
-
-
-    addDays = (dateString, days) => {
-
-        const dateParts =
+        const parts =
             dateString.split("-");
 
-        const date = new Date(
+        const date =
+            new Date(
 
-            Number(dateParts[0]),
-            Number(dateParts[1]) - 1,
-            Number(dateParts[2])
+                Number(parts[0]),
 
-        );
+                Number(parts[1]) - 1,
+
+                Number(parts[2])
+
+            );
 
 
         date.setDate(
@@ -125,19 +101,78 @@ class SalesTransactionPage extends React.Component {
             date.getFullYear();
 
         const month =
-            String(date.getMonth() + 1)
-                .padStart(2, "0");
+            String(
+                date.getMonth() + 1
+            ).padStart(2, "0");
 
         const day =
-            String(date.getDate())
-                .padStart(2, "0");
+            String(
+                date.getDate()
+            ).padStart(2, "0");
 
 
-        return `${year}-${month}-${day}`;
+        return (
+            `${year}-${month}-${day}`
+        );
+
     };
 
 
-    handlePaymentTermsChange = (event) => {
+    calculateDueDate = (
+        paymentTerms
+    ) => {
+
+        const invoiceDate =
+            this.state.transactionDate;
+
+
+        if (!invoiceDate) {
+
+            return null;
+
+        }
+
+
+        switch (paymentTerms) {
+
+            case "Advance":
+
+                return null;
+
+
+            case "Against Delivery":
+
+                return invoiceDate;
+
+
+            case "30 Days":
+
+                return this.addDays(
+                    invoiceDate,
+                    30
+                );
+
+
+            case "45 Days":
+
+                return this.addDays(
+                    invoiceDate,
+                    45
+                );
+
+
+            default:
+
+                return null;
+
+        }
+
+    };
+
+
+    handlePaymentTermsChange = (
+        event
+    ) => {
 
         const paymentTerms =
             event.target.value;
@@ -162,83 +197,6 @@ class SalesTransactionPage extends React.Component {
     };
 
 
-    handleDeliveryModeChange = (event) => {
-
-        this.setState({
-
-            deliveryMode:
-                event.target.value
-
-        });
-
-    };
-
-
-    handleDeliveryPaymentTermsChange =
-        (event) => {
-
-            this.setState({
-
-                deliveryPaymentTerms:
-                    event.target.value
-
-            });
-
-        };
-
-
-    handlePODetailsChange = (event) => {
-
-        const poDetails =
-            event.target.value;
-
-
-        this.setState({
-
-            poDetails: poDetails,
-
-            poNumber:
-                poDetails === "Verbal"
-                    ? ""
-                    : this.state.poNumber,
-
-            poDate:
-                poDetails === "Verbal"
-                    ? ""
-                    : (
-                        this.state.poDate ||
-                        this.state.transactionDate
-                    )
-
-        });
-
-    };
-
-
-    handlePODateChange = (event) => {
-
-        this.setState({
-
-            poDate:
-                event.target.value
-
-        });
-
-    };
-
-
-    handlePONumberChange = (event) => {
-
-        this.setState({
-
-            poNumber:
-                event.target.value
-
-        });
-
-    };
-
-
     handleNext = () => {
 
         if (!this.state.paymentTerms) {
@@ -248,6 +206,7 @@ class SalesTransactionPage extends React.Component {
             );
 
             return;
+
         }
 
 
@@ -258,6 +217,7 @@ class SalesTransactionPage extends React.Component {
             );
 
             return;
+
         }
 
 
@@ -268,6 +228,7 @@ class SalesTransactionPage extends React.Component {
             );
 
             return;
+
         }
 
 
@@ -278,39 +239,84 @@ class SalesTransactionPage extends React.Component {
             );
 
             return;
+
         }
 
 
         if (
-            this.state.poDetails === "PO Date" &&
-            !this.state.poNumber
+            this.state.poDetails ===
+            "PO Date"
         ) {
 
-            alert(
-                "Please enter PO Number."
-            );
+            if (!this.state.poNumber) {
 
-            return;
+                alert(
+                    "Please enter PO Number."
+                );
+
+                return;
+
+            }
+
+
+            if (!this.state.poDate) {
+
+                alert(
+                    "Please select PO Date."
+                );
+
+                return;
+
+            }
+
+
+            if (
+                this.state.poDate >
+                this.state.transactionDate
+            ) {
+
+                alert(
+                    "PO Date cannot be after Invoice Date."
+                );
+
+                return;
+
+            }
+
         }
 
 
-        if (
-            this.state.poDetails === "PO Date" &&
-            !this.state.poDate
-        ) {
+        /*
+         * Backend receives these values.
+         *
+         * Do not depend on paymentDueDate
+         * sent from FE for final calculation.
+         */
 
-            alert(
-                "Please select PO Date."
-            );
+        const apiData = {
 
-            return;
-        }
+            paymentTerms:
+                this.state.paymentTerms,
+
+            deliveryMode:
+                this.state.deliveryMode,
+
+            deliveryPaymentTerms:
+                this.state.deliveryPaymentTerms,
+
+            poDetails:
+                this.state.poDetails,
+
+            poNumber:
+                this.state.poNumber,
+
+            poDate:
+                this.state.poDate
+
+        };
 
 
-        this.props.updateSalesData({
-
-            transactionDate:
-                this.state.transactionDate,
+        const localData = {
 
             paymentTerms:
                 this.state.paymentTerms,
@@ -333,10 +339,44 @@ class SalesTransactionPage extends React.Component {
             poDate:
                 this.state.poDate
 
+        };
+
+
+        this.props.saveStepAndNext(
+
+            apiData,
+
+            localData
+
+        );
+
+    };
+
+
+    handlePODetailsChange = (
+        event
+    ) => {
+
+        const poDetails =
+            event.target.value;
+
+
+        this.setState({
+
+            poDetails:
+                poDetails,
+
+            poNumber:
+                poDetails === "Verbal"
+                    ? ""
+                    : this.state.poNumber,
+
+            poDate:
+                poDetails === "Verbal"
+                    ? ""
+                    : this.state.poDate
+
         });
-
-
-        this.props.nextStep();
 
     };
 
@@ -344,212 +384,272 @@ class SalesTransactionPage extends React.Component {
     render() {
 
         const isPODateSelected =
-            this.state.poDetails === "PO Date";
+            this.state.poDetails ===
+            "PO Date";
 
 
         return (
 
             <div className="sales-card">
 
-                <h2>
-                    Transaction Details
-                </h2>
-
-
-                <div
+                <Typography
+                    variant="h5"
                     style={{
-                        display: "grid",
-                        gridTemplateColumns:
-                            "1fr 1fr",
-                        gap: "20px",
-                        marginTop: "25px"
+                        fontWeight: 600,
+                        color: "#1e293b"
+                    }}
+                >
+                    Transaction Details
+                </Typography>
+
+                <Typography
+                    variant="body2"
+                    style={{
+                        color: "#64748b",
+                        marginTop: "5px",
+                        marginBottom: "25px"
+                    }}
+                >
+                    Enter the basic information for this sales
+                    transaction.
+                </Typography>
+
+
+                <Card
+                    elevation={0}
+                    style={{
+                        border:
+                            "1px solid #e2e8f0",
+                        borderRadius: "10px"
                     }}
                 >
 
-                    {/* Invoice Date */}
+                    <CardContent>
 
-                    <TextField
-                        label="Invoice Date"
-                        type="date"
-                        value={
-                            this.state.transactionDate
-                        }
-                        InputLabelProps={{
-                            shrink: true
-                        }}
-                        disabled
-                        fullWidth
-                    />
+                        <Typography
+                            variant="h6"
+                            style={{
+                                fontWeight: 600,
+                                color: "#1e293b"
+                            }}
+                        >
+                            Transaction Information
+                        </Typography>
 
 
-                    {/* Payment Terms */}
-
-                    <TextField
-                        select
-                        label="Payment Terms"
-                        value={
-                            this.state.paymentTerms
-                        }
-                        onChange={
-                            this.handlePaymentTermsChange
-                        }
-                        fullWidth
-                    >
-
-                        <MenuItem value="Advance">
-                            Advance
-                        </MenuItem>
-
-                        <MenuItem value="Against Delivery">
-                            Against Delivery
-                        </MenuItem>
-
-                        <MenuItem value="30 Days">
-                            30 Days
-                        </MenuItem>
-
-                        <MenuItem value="45 Days">
-                            45 Days
-                        </MenuItem>
-
-                    </TextField>
+                        <Divider
+                            style={{
+                                marginTop: "15px",
+                                marginBottom: "25px"
+                            }}
+                        />
 
 
-                    {/* Payment Due Date */}
+                        <div
+                            style={{
+                                display: "grid",
+                                gridTemplateColumns:
+                                    "1fr 1fr",
+                                gap: "20px"
+                            }}
+                        >
 
-                    <TextField
-                        label="Payment Due Date"
-                        type="date"
-                        value={
-                            this.state.paymentDueDate || ""
-                        }
-                        InputLabelProps={{
-                            shrink: true
-                        }}
-                        disabled
-                        fullWidth
-                    />
-
-
-                    {/* Delivery Mode */}
-
-                    <TextField
-                        select
-                        label="Delivery Mode"
-                        value={
-                            this.state.deliveryMode
-                        }
-                        onChange={
-                            this.handleDeliveryModeChange
-                        }
-                        fullWidth
-                    >
-
-                        <MenuItem value="Door Delivery">
-                            Door Delivery
-                        </MenuItem>
-
-                        <MenuItem value="Through Transport">
-                            Through Transport
-                        </MenuItem>
-
-                    </TextField>
+                            <TextField
+                                label="Invoice Date"
+                                type="date"
+                                value={
+                                    this.state.transactionDate
+                                }
+                                InputLabelProps={{
+                                    shrink: true
+                                }}
+                                disabled
+                                fullWidth
+                            />
 
 
-                    {/* Delivery Payment Terms */}
+                            <TextField
+                                select
+                                label="Payment Terms"
+                                value={
+                                    this.state.paymentTerms
+                                }
+                                onChange={
+                                    this.handlePaymentTermsChange
+                                }
+                                fullWidth
+                            >
 
-                    <TextField
-                        select
-                        label="Delivery Payment Terms"
-                        value={
-                            this.state.deliveryPaymentTerms
-                        }
-                        onChange={
-                            this
-                                .handleDeliveryPaymentTermsChange
-                        }
-                        fullWidth
-                    >
+                                <MenuItem value="Advance">
+                                    Advance
+                                </MenuItem>
 
-                        <MenuItem value="To Pay">
-                            To Pay
-                        </MenuItem>
+                                <MenuItem value="Against Delivery">
+                                    Against Delivery
+                                </MenuItem>
 
-                        <MenuItem value="Paid">
-                            Paid
-                        </MenuItem>
+                                <MenuItem value="30 Days">
+                                    30 Days
+                                </MenuItem>
 
-                    </TextField>
+                                <MenuItem value="45 Days">
+                                    45 Days
+                                </MenuItem>
 
-
-                    {/* PO Details */}
-
-                    <TextField
-                        select
-                        label="PO Details"
-                        value={
-                            this.state.poDetails
-                        }
-                        onChange={
-                            this.handlePODetailsChange
-                        }
-                        fullWidth
-                    >
-
-                        <MenuItem value="PO Date">
-                            PO Date
-                        </MenuItem>
-
-                        <MenuItem value="Verbal">
-                            Verbal
-                        </MenuItem>
-
-                    </TextField>
+                            </TextField>
 
 
-                    {/* PO Number */}
-
-                    <TextField
-                        label="PO Number"
-                        value={
-                            this.state.poNumber
-                        }
-                        onChange={
-                            this.handlePONumberChange
-                        }
-                        disabled={
-                            !isPODateSelected
-                        }
-                        fullWidth
-                    />
+                            <TextField
+                                label="Payment Due Date"
+                                type="date"
+                                value={
+                                    this.state.paymentDueDate || ""
+                                }
+                                InputLabelProps={{
+                                    shrink: true
+                                }}
+                                disabled
+                                fullWidth
+                            />
 
 
-                    {/* PO Date */}
+                            <TextField
+                                select
+                                label="Delivery Mode"
+                                value={
+                                    this.state.deliveryMode
+                                }
+                                onChange={(event) =>
+                                    this.setState({
 
-                    <TextField
-                        label="PO Date"
-                        type="date"
-                        value={
-                            this.state.poDate
-                        }
-                        onChange={
-                            this.handlePODateChange
-                        }
-                        InputLabelProps={{
-                            shrink: true
-                        }}
-                        disabled={
-                            !isPODateSelected
-                        }
-                        fullWidth
-                    />
+                                        deliveryMode:
+                                            event.target.value
 
-                </div>
+                                    })
+                                }
+                                fullWidth
+                            >
+
+                                <MenuItem value="Door Delivery">
+                                    Door Delivery
+                                </MenuItem>
+
+                                <MenuItem value="Through Transport">
+                                    Through Transport
+                                </MenuItem>
+
+                            </TextField>
+
+
+                            <TextField
+                                select
+                                label="Delivery Payment Terms"
+                                value={
+                                    this.state.deliveryPaymentTerms
+                                }
+                                onChange={(event) =>
+                                    this.setState({
+
+                                        deliveryPaymentTerms:
+                                            event.target.value
+
+                                    })
+                                }
+                                fullWidth
+                            >
+
+                                <MenuItem value="To Pay">
+                                    To Pay
+                                </MenuItem>
+
+                                <MenuItem value="Paid">
+                                    Paid
+                                </MenuItem>
+
+                            </TextField>
+
+
+                            <TextField
+                                select
+                                label="PO Details"
+                                value={
+                                    this.state.poDetails
+                                }
+                                onChange={
+                                    this.handlePODetailsChange
+                                }
+                                fullWidth
+                            >
+
+                                <MenuItem value="PO Date">
+                                    PO Date
+                                </MenuItem>
+
+                                <MenuItem value="Verbal">
+                                    Verbal
+                                </MenuItem>
+
+                            </TextField>
+
+
+                            <TextField
+                                label="PO Number"
+                                value={
+                                    this.state.poNumber
+                                }
+                                onChange={(event) =>
+                                    this.setState({
+
+                                        poNumber:
+                                            event.target.value
+
+                                    })
+                                }
+                                disabled={
+                                    !isPODateSelected
+                                }
+                                fullWidth
+                            />
+
+
+                            <TextField
+                                label="PO Date"
+                                type="date"
+                                value={
+                                    this.state.poDate
+                                }
+                                onChange={(event) =>
+                                    this.setState({
+
+                                        poDate:
+                                            event.target.value
+
+                                    })
+                                }
+                                InputLabelProps={{
+                                    shrink: true
+                                }}
+                                inputProps={{
+                                    max:
+                                        this.state.transactionDate ||
+                                        this.getTodayDate()
+                                }}
+                                disabled={
+                                    !isPODateSelected
+                                }
+                                fullWidth
+                            />
+
+                        </div>
+
+                    </CardContent>
+
+                </Card>
 
 
                 <div
                     style={{
-                        marginTop: "30px",
+                        marginTop: "25px",
                         display: "flex",
                         justifyContent: "flex-end"
                     }}
@@ -569,7 +669,9 @@ class SalesTransactionPage extends React.Component {
             </div>
 
         );
+
     }
+
 }
 
 export default SalesTransactionPage;
